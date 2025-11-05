@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Prompt, PromptType } from '../prompts/collection';
+import { Prompt, PromptType, PromptTechnique } from '../prompts/collection';
+import { PROMPT_TECHNIQUES } from '../prompts/library';
 
 interface EditPromptModalProps {
   prompt: Prompt;
@@ -24,6 +25,7 @@ export const EditPromptModal: React.FC<EditPromptModalProps> = ({ prompt, catego
   const [newCategory, setNewCategory] = useState<string>('');
   const [promptType, setPromptType] = useState<PromptType>(prompt.type || 'image');
   const [imageUrl, setImageUrl] = useState<string | undefined>(prompt.imageUrl);
+  const [technique, setTechnique] = useState<PromptTechnique | undefined>(prompt.technique);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -41,6 +43,7 @@ export const EditPromptModal: React.FC<EditPromptModalProps> = ({ prompt, catego
       prompt: promptText,
       category: finalCategory,
       type: promptType,
+      technique: technique,
       imageUrl: imageUrl,
     });
   };
@@ -94,6 +97,21 @@ export const EditPromptModal: React.FC<EditPromptModalProps> = ({ prompt, catego
                     </button>
                 ))}
             </div>
+        </div>
+
+        <div>
+          <label htmlFor="technique-select-edit" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Prompting Technique
+          </label>
+          <select
+            id="technique-select-edit"
+            value={technique || ''}
+            onChange={(e) => setTechnique(e.target.value as PromptTechnique)}
+            className="w-full bg-gray-50 dark:bg-gray-800/80 border-2 border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          >
+            <option value="">None</option>
+            {PROMPT_TECHNIQUES.map(tech => <option key={tech} value={tech}>{tech}</option>)}
+          </select>
         </div>
 
         <div>

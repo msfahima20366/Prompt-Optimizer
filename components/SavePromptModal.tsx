@@ -1,11 +1,12 @@
 import React, { useState } from 'react';
-import { PromptType } from '../prompts/collection';
+import { PromptType, PromptTechnique } from '../prompts/collection';
+import { PROMPT_TECHNIQUES } from '../prompts/library';
 
 interface SavePromptModalProps {
   promptText: string;
   initialTitle?: string;
   categories: string[];
-  onSave: (title: string, category: string, type: PromptType, imageUrl?: string) => void;
+  onSave: (title: string, category: string, type: PromptType, technique: PromptTechnique, imageUrl?: string) => void;
   onCancel: () => void;
 }
 
@@ -24,6 +25,7 @@ export const SavePromptModal: React.FC<SavePromptModalProps> = ({ promptText, in
   const [selectedCategory, setSelectedCategory] = useState<string>('');
   const [newCategory, setNewCategory] = useState<string>('');
   const [promptType, setPromptType] = useState<PromptType>('text');
+  const [technique, setTechnique] = useState<PromptTechnique>('Zero-shot');
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
 
   const handleImageUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -37,7 +39,7 @@ export const SavePromptModal: React.FC<SavePromptModalProps> = ({ promptText, in
   const handleSave = () => {
     const finalCategory = newCategory.trim() || selectedCategory;
     if (title.trim()) {
-      onSave(title.trim(), finalCategory, promptType, imageUrl);
+      onSave(title.trim(), finalCategory, promptType, technique, imageUrl);
     }
   };
 
@@ -92,6 +94,20 @@ export const SavePromptModal: React.FC<SavePromptModalProps> = ({ promptText, in
                     </button>
                 ))}
             </div>
+        </div>
+
+        <div>
+          <label htmlFor="technique-select-save" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            Prompting Technique
+          </label>
+          <select
+            id="technique-select-save"
+            value={technique}
+            onChange={(e) => setTechnique(e.target.value as PromptTechnique)}
+            className="w-full bg-gray-50 dark:bg-gray-800/80 border-2 border-gray-300 dark:border-gray-700 rounded-lg px-4 py-2 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
+          >
+            {PROMPT_TECHNIQUES.map(tech => <option key={tech} value={tech}>{tech}</option>)}
+          </select>
         </div>
 
         <div>

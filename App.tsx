@@ -5,7 +5,7 @@ import { Header } from './components/Header';
 import { generateImage } from './services/geminiService';
 import { Tabs } from './components/Tabs';
 import { CollectionView } from './components/CollectionView';
-import { Prompt, PromptType, UserContext, LibraryPrompt, HistoryItem, Project, Workflow, User, CommunityPrompt } from './prompts/collection';
+import { Prompt, PromptType, UserContext, LibraryPrompt, HistoryItem, Project, Workflow, User, CommunityPrompt, PromptTechnique } from './prompts/collection';
 import { EditPromptModal } from './components/EditPromptModal';
 import { SavePromptModal } from './components/SavePromptModal';
 import { PromptDetailModal } from './components/PromptDetailModal';
@@ -173,9 +173,9 @@ const App: React.FC = () => {
     }
   }, [addToHistory]);
 
-  const handleSaveNewPrompt = useCallback((title: string, category: string, type: PromptType, promptText: string, imageUrl?: string) => {
+  const handleSaveNewPrompt = useCallback((title: string, category: string, type: PromptType, technique: PromptTechnique, promptText: string, imageUrl?: string) => {
     const newPrompt: Prompt = {
-      id: `user-${Date.now()}`, title, prompt: promptText, isFavorite: false, category, type, imageUrl, isShared: false,
+      id: `user-${Date.now()}`, title, prompt: promptText, isFavorite: false, category, type, technique, imageUrl, isShared: false,
     };
     setUserCollection(prev => [newPrompt, ...prev]);
     if (category && !userCategories.includes(category)) {
@@ -191,7 +191,7 @@ const App: React.FC = () => {
 
   const handleForkPrompt = useCallback((prompt: LibraryPrompt) => {
     const newPrompt: Prompt = {
-      id: `user-${Date.now()}`, title: prompt.title, prompt: prompt.prompt, isFavorite: false, category: prompt.category, type: 'image', isShared: false,
+      id: `user-${Date.now()}`, title: prompt.title, prompt: prompt.prompt, isFavorite: false, category: prompt.category, type: prompt.type, technique: prompt.technique, isShared: false,
     };
     setUserCollection(prev => [newPrompt, ...prev]);
   }, []);
@@ -362,6 +362,7 @@ const App: React.FC = () => {
         prompt: promptToShare.prompt,
         category: promptToShare.category,
         type: promptToShare.type,
+        technique: promptToShare.technique,
         createdAt: Date.now(),
         likes: 0,
         forks: 0,
@@ -408,7 +409,7 @@ const App: React.FC = () => {
 
   const handleForkCommunityPrompt = useCallback((promptToFork: CommunityPrompt) => {
     const newPrompt: Prompt = {
-      id: `user-${Date.now()}`, title: promptToFork.title, prompt: promptToFork.prompt, isFavorite: false, category: promptToFork.category, type: promptToFork.type, isShared: false,
+      id: `user-${Date.now()}`, title: promptToFork.title, prompt: promptToFork.prompt, isFavorite: false, category: promptToFork.category, type: promptToFork.type, technique: promptToFork.technique, isShared: false,
     };
     setUserCollection(prev => [newPrompt, ...prev]);
     setCommunityPrompts(prev => prev.map(p => p.id === promptToFork.id ? { ...p, forks: p.forks + 1 } : p));
@@ -533,7 +534,7 @@ const App: React.FC = () => {
         </div>
       </div>
       
-      {savingPrompt && <SavePromptModal promptText={savingPrompt.prompt} initialTitle={savingPrompt.title} categories={userCategories} onSave={(title, category, type, imageUrl) => handleSaveNewPrompt(title, category, type, savingPrompt.prompt, imageUrl)} onCancel={() => setSavingPrompt(null)} />}
+      {savingPrompt && <SavePromptModal promptText={savingPrompt.prompt} initialTitle={savingPrompt.title} categories={userCategories} onSave={(title, category, type, technique, imageUrl) => handleSaveNewPrompt(title, category, type, technique, savingPrompt.prompt, imageUrl)} onCancel={() => setSavingPrompt(null)} />}
       {editingPrompt && <EditPromptModal prompt={editingPrompt} categories={userCategories} onSave={handleUpdatePrompt} onCancel={handleCancelEdit} />}
       {viewingPrompt && <PromptDetailModal prompt={viewingPrompt} onClose={() => setViewingPrompt(null)} onEdit={('isFavorite' in viewingPrompt) ? handleStartEdit : undefined} onDelete={('isFavorite' in viewingPrompt) ? handleDeletePrompt : undefined} onUse={() => {}} onToggleFavorite={('isFavorite' in viewingPrompt) ? handleToggleFavorite : undefined} onSave={(promptToSave) => setSavingPrompt({prompt: promptToSave.prompt, title: promptToSave.title})} currentUser={currentUser} onShare={('isFavorite' in viewingPrompt) ? handleSharePrompt : undefined} />}
       {isHistoryModalOpen && <HistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={promptHistory} onUse={handleUseHistoryPrompt} onDelete={handleDeleteHistoryItem} onClearAll={handleClearHistory} />}

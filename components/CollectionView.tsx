@@ -74,10 +74,11 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
     return userCollection.filter(p => {
         if (collectionFilter === 'favorites' && !p.isFavorite) return false;
         if (userCollectionTypeFilter !== 'all' && p.type !== userCollectionTypeFilter) return false;
+        if (techniqueFilter !== 'All' && p.technique !== techniqueFilter) return false;
         if (!checkSearchMatch(p, searchQuery)) return false;
         return true;
     });
-  }, [userCollection, searchQuery, collectionFilter, userCollectionTypeFilter]);
+  }, [userCollection, searchQuery, collectionFilter, userCollectionTypeFilter, techniqueFilter]);
 
 
   const noPromptsFound = filteredLibraryPrompts.length === 0 && filteredUserCollection.length === 0;
