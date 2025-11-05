@@ -161,7 +161,13 @@ const App: React.FC = () => {
       addToHistory(prompt);
     } catch (e) {
       console.error(e);
-      setImageError('Failed to generate image. The prompt may have been blocked or the service is unavailable.');
+      const errorMessage = e instanceof Error ? e.message.toLowerCase() : '';
+      // Check for keywords related to safety or blocking
+      if (errorMessage.includes('block') || errorMessage.includes('safety')) {
+        setImageError('Image generation failed. Your prompt was likely blocked for safety reasons. Please try different wording.');
+      } else {
+        setImageError('Failed to generate image. The service may be temporarily unavailable or there was an issue with the request.');
+      }
     } finally {
       setIsGeneratingImage(false);
     }

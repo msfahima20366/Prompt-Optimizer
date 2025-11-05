@@ -1,4 +1,5 @@
 
+
 import { GoogleGenAI, Type } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
@@ -153,12 +154,16 @@ export const generateImage = async (prompt: string): Promise<string> => {
     const base64ImageBytes: string | undefined = response.generatedImages?.[0]?.image?.imageBytes;
 
     if (!base64ImageBytes) {
-      throw new Error("No image data received from the API.");
+      throw new Error("No image data received from the API. This may be due to a safety block.");
     }
     
     return `data:image/png;base64,${base64ImageBytes}`;
   } catch (error) {
     console.error("Error generating image with Gemini:", error);
-    throw new Error("Failed to generate image. The prompt may have been blocked.");
+    if (error instanceof Error) {
+        // Pass the actual error message up the chain for better UI feedback
+        throw new Error(error.message);
+    }
+    throw new Error("An unexpected error occurred during image generation.");
   }
 };
