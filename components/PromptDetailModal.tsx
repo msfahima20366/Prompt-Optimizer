@@ -1,6 +1,4 @@
 
-
-
 // Fix: Import `useMemo` from `react` to resolve the "Cannot find name 'useMemo'" error.
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Prompt, LibraryPrompt, User } from '../prompts/collection';
@@ -143,22 +141,30 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, us
         }
 
         const copyToClipboard = async (text: string): Promise<boolean> => {
+            // Modern, secure clipboard API
             if (navigator.clipboard && window.isSecureContext) {
                 try {
                     await navigator.clipboard.writeText(text);
                     return true;
-                } catch (err) { console.error('Clipboard API failed, falling back.', err); }
+                } catch (err) {
+                    console.error('Async clipboard API failed, falling back.', err);
+                }
             }
+            
+            // Fallback for older browsers
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            textArea.style.position = "fixed"; textArea.style.opacity = "0";
+            textArea.style.position = "fixed"; 
+            textArea.style.left = "-9999px";
+            textArea.style.top = "-9999px";
             document.body.appendChild(textArea);
-            textArea.focus(); textArea.select();
+            textArea.focus();
+            textArea.select();
             let success = false;
             try {
                 success = document.execCommand('copy');
             } catch (err) {
-                console.error('Fallback: an error occurred copying text', err);
+                console.error('Fallback: unable to copy', err);
             }
             document.body.removeChild(textArea);
             return success;
@@ -231,7 +237,9 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, us
                         <MetaDataItem label="Goal" value={isLibraryPrompt ? libraryPrompt.goal : 'A prompt from your personal collection.'} />
                         {libraryPrompt?.category && <MetaDataItem label="Category" value={libraryPrompt.category} />}
                         {userPrompt?.category && <MetaDataItem label="Category" value={userPrompt.category} />}
-
+                        
+                        {libraryPrompt?.llmModels && <MetaDataItem label="Compatible Models" value={libraryPrompt.llmModels.join(', ')} />}
+                        {libraryPrompt?.tags && <MetaDataItem label="Keywords" value={libraryPrompt.tags.join(', ')} />}
                         {libraryPrompt?.technique && <MetaDataItem label="Technique" value={libraryPrompt.technique} />}
                         {libraryPrompt?.temperature && <MetaDataItem label="Suggested Temp." value={libraryPrompt.temperature.toFixed(1)} />}
                         {libraryPrompt?.tokens && <MetaDataItem label="Approx. Tokens" value={libraryPrompt.tokens} />}
