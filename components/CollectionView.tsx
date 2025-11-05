@@ -1,5 +1,5 @@
-import React, { useState, useMemo } from 'react';
-import { Prompt, LibraryPrompt, LLMModel, PromptTechnique, PromptType } from '../prompts/collection';
+import React, { useState, useMemo, useEffect } from 'react';
+import { Prompt, LibraryPrompt, LLMModel, PromptTechnique, PromptType, TEXT_MODELS, IMAGE_MODELS, VIDEO_MODELS, ALL_LLM_MODELS } from '../prompts/collection';
 import { LIBRARY_PROMPTS, LIBRARY_CATEGORIES, PROMPT_TECHNIQUES } from '../prompts/library';
 import { PromptCard } from './PromptCard';
 import { FilterDropdown } from './FilterDropdown';
@@ -27,7 +27,6 @@ const checkSearchMatch = (prompt: Prompt | LibraryPrompt, query: string): boolea
     return inTitle || inPrompt || inTags;
 };
 
-const LLM_MODELS: LLMModel[] = ['Gemini', 'ChatGPT', 'Claude'];
 const PROMPT_TYPE_OPTIONS = ['All', 'Text-based Prompt', 'Image Generate Prompt', 'Video Generate Prompt'];
 
 
@@ -53,6 +52,26 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
   const [libraryTypeFilter, setLibraryTypeFilter] = useState<string>('All');
   const [userCollectionTypeFilter, setUserCollectionTypeFilter] = useState<'all' | PromptType>('all');
+
+  const availableLlmModels = useMemo(() => {
+    switch (libraryTypeFilter) {
+        case 'Text-based Prompt':
+            return TEXT_MODELS;
+        case 'Image Generate Prompt':
+            return IMAGE_MODELS;
+        case 'Video Generate Prompt':
+            return VIDEO_MODELS;
+        case 'All':
+        default:
+            return ALL_LLM_MODELS;
+    }
+  }, [libraryTypeFilter]);
+
+  useEffect(() => {
+    if (llmFilter !== 'All' && !availableLlmModels.includes(llmFilter)) {
+        setLlmFilter('All');
+    }
+  }, [llmFilter, availableLlmModels]);
 
   const filteredLibraryPrompts = useMemo(() => {
     if (collectionFilter === 'favorites') return []; // Don't show library when viewing favorites
@@ -102,10 +121,10 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
               />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <FilterDropdown label="LLM Model" options={['All', ...LLM_MODELS]} selectedValue={llmFilter} onValueChange={setLlmFilter as (val: string) => void} />
+              <FilterDropdown label="Type" options={PROMPT_TYPE_OPTIONS} selectedValue={libraryTypeFilter} onValueChange={setLibraryTypeFilter} />
+              <FilterDropdown label="LLM Model" options={['All', ...availableLlmModels]} selectedValue={llmFilter} onValueChange={setLlmFilter as (val: string) => void} />
               <FilterDropdown label="Technique" options={['All', ...PROMPT_TECHNIQUES]} selectedValue={techniqueFilter} onValueChange={setTechniqueFilter as (val: string) => void} />
               <FilterDropdown label="Category" options={['All', ...LIBRARY_CATEGORIES]} selectedValue={categoryFilter} onValueChange={setCategoryFilter} />
-              <FilterDropdown label="Type" options={PROMPT_TYPE_OPTIONS} selectedValue={libraryTypeFilter} onValueChange={setLibraryTypeFilter} />
           </div>
         </div>
       )}

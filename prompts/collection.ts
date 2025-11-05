@@ -1,9 +1,41 @@
 // All type definitions for the application
 
 export type PromptType = 'text' | 'image' | 'video';
-export type LLMModel = 'Gemini' | 'ChatGPT' | 'Claude' | 'Other';
 
-// This list is defined as a constant in library.ts, so we declare the type here.
+// Expanded list of LLM models
+export type LLMModel = 
+    // Text Models
+    'ChatGPT' | 
+    'Claude' | 
+    'Gemini' | 
+    'DeepSeek' | 
+    'Llama' | 
+    'Qwen' | 
+    'Grok' | 
+    'Co-pilot' | 
+    'Perplexity' | 
+    'Gamma AI' |
+    // Image Models
+    'Midjourney' |
+    'Stable Diffusion' |
+    'DALL-E' |
+    'Imagen' |
+    // Video Models
+    'Sora' |
+    'Veo' |
+    'RunwayML' |
+    'Pika' |
+    // Other
+    'Other';
+
+// Categorized model lists for filtering
+export const TEXT_MODELS: LLMModel[] = ['ChatGPT', 'Claude', 'Gemini', 'DeepSeek', 'Llama', 'Qwen', 'Grok', 'Co-pilot', 'Perplexity', 'Gamma AI'];
+export const IMAGE_MODELS: LLMModel[] = ['Midjourney', 'Stable Diffusion', 'DALL-E', 'Imagen', 'Gemini'];
+export const VIDEO_MODELS: LLMModel[] = ['Sora', 'Veo', 'RunwayML', 'Pika', 'Gemini'];
+
+export const ALL_LLM_MODELS: LLMModel[] = [...new Set([...TEXT_MODELS, ...IMAGE_MODELS, ...VIDEO_MODELS])].sort();
+
+
 export type PromptTechnique = 
     'Zero-shot' |
     'Few-shot' |

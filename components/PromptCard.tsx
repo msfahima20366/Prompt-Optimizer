@@ -40,7 +40,15 @@ const LLMIcon: React.FC<{ model: string }> = ({ model }) => {
         case 'Gemini': return <div className={`${baseClass} bg-gradient-to-br from-blue-400 to-purple-500`} title="Gemini"></div>;
         case 'ChatGPT': return <div className={`${baseClass} bg-gradient-to-br from-green-400 to-teal-500`} title="ChatGPT"></div>;
         case 'Claude': return <div className={`${baseClass} bg-gradient-to-br from-orange-400 to-yellow-500`} title="Claude"></div>;
-        default: return null;
+        case 'Midjourney': return <div className={`${baseClass} bg-gradient-to-br from-indigo-500 to-black`} title="Midjourney"></div>;
+        case 'Stable Diffusion': return <div className={`${baseClass} bg-gradient-to-br from-purple-600 to-pink-500`} title="Stable Diffusion"></div>;
+        case 'DALL-E': return <div className={`${baseClass} bg-gradient-to-br from-sky-400 to-cyan-300`} title="DALL-E"></div>;
+        case 'Imagen': return <div className={`${baseClass} bg-gradient-to-br from-rose-400 to-red-500`} title="Imagen"></div>;
+        case 'Sora': return <div className={`${baseClass} bg-gradient-to-br from-slate-600 to-slate-800`} title="Sora"></div>;
+        case 'Veo': return <div className={`${baseClass} bg-gradient-to-br from-emerald-400 to-green-600`} title="Veo"></div>;
+        case 'Llama': return <div className={`${baseClass} bg-gradient-to-br from-red-500 to-orange-500`} title="Llama"></div>;
+        case 'Grok': return <div className={`${baseClass} bg-gradient-to-br from-gray-700 to-blue-900`} title="Grok"></div>;
+        default: return <div className={`${baseClass} bg-gray-400`} title={model}></div>;
     }
 };
 
