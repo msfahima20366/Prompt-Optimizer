@@ -1,6 +1,28 @@
 export type PromptType = 'image' | 'text' | 'video';
 export type LLMModel = 'Gemini' | 'ChatGPT' | 'Claude' | 'Other';
-export type PromptTechnique = 'Zero-shot' | 'Few-shot' | 'Chain-of-Thought' | 'Other';
+export type PromptTechnique =
+  // Core
+  | 'Zero-shot'
+  | 'Few-shot'
+  | 'One-shot'
+  | 'Chain-of-Thought (CoT)'
+  | 'ReAct (Reason + Act)'
+  | 'Self-Consistency'
+  | 'Tree-of-Thought (ToT)'
+  | 'Meta Prompting'
+  | 'Automatic Prompt Engineer (APE)'
+  | 'Generated Knowledge'
+  // Advanced / Specialized
+  | 'Prompt Chaining'
+  | 'Reflexion'
+  | 'Contrastive Prompting'
+  | 'Instruction-based'
+  | 'Role-based'
+  | 'Multimodal'
+  | 'Contextual'
+  | 'Iterative Prompting'
+  | 'Dynamic Prompting'
+  | 'Instruction and Example Hybrid';
 
 
 export interface Prompt {

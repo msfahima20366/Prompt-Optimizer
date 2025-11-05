@@ -11,9 +11,28 @@ export const LIBRARY_CATEGORIES = [
 ];
 
 export const PROMPT_TECHNIQUES = [
+    // Core
     'Zero-shot',
     'Few-shot',
-    'Chain-of-Thought'
+    'One-shot',
+    'Chain-of-Thought (CoT)',
+    'ReAct (Reason + Act)',
+    'Self-Consistency',
+    'Tree-of-Thought (ToT)',
+    'Meta Prompting',
+    'Automatic Prompt Engineer (APE)',
+    'Generated Knowledge',
+    // Advanced / Specialized
+    'Prompt Chaining',
+    'Reflexion',
+    'Contrastive Prompting',
+    'Instruction-based',
+    'Role-based',
+    'Multimodal',
+    'Contextual',
+    'Iterative Prompting',
+    'Dynamic Prompting',
+    'Instruction and Example Hybrid',
 ];
 
 export const LIBRARY_PROMPTS: LibraryPrompt[] = [
@@ -72,7 +91,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     goal: 'To create a persuasive and structured ad copy that effectively guides a potential customer towards taking a desired action.',
     category: 'Marketing',
     llmModels: ['Gemini', 'ChatGPT', 'Claude'],
-    technique: 'Chain-of-Thought',
+    technique: 'Chain-of-Thought (CoT)',
     tokens: 85,
     temperature: 0.9,
     tags: ['#advertising', '#copywriting', '#aida'],
@@ -134,7 +153,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     goal: 'To perform a structured strategic analysis, identifying key internal and external factors that can impact a business.',
     category: 'Business',
     llmModels: ['Gemini', 'Claude'],
-    technique: 'Chain-of-Thought',
+    technique: 'Chain-of-Thought (CoT)',
     tokens: 90,
     temperature: 0.6,
     tags: ['#strategy', '#business-analysis', '#swot'],
@@ -215,7 +234,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     goal: 'To make a complex topic easier to understand by providing both a formal definition and a relatable analogy.',
     category: 'Education',
     llmModels: ['Gemini', 'Claude'],
-    technique: 'Chain-of-Thought',
+    technique: 'Chain-of-Thought (CoT)',
     tokens: 75,
     temperature: 0.6,
     tags: ['#learning', '#teaching', '#analogy'],
