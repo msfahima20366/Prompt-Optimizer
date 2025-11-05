@@ -25,15 +25,15 @@ const TabButton: React.FC<{
 
 export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
     const mainViews: { key: View, label: string }[] = [
-        { key: 'builder', label: 'Builder' },
-        { key: 'optimizer', label: 'Optimizer' },
         { key: 'collection', label: 'Collection' },
+        { key: 'optimizer', label: 'Optimizer' },
     ];
 
-    const dropdownViews: { key: View, label: string }[] = [
+    const dropdownViews: { key: View, label: string, isComingSoon?: boolean }[] = [
         { key: 'community', label: 'Community' },
         { key: 'projects', label: 'Projects' },
         { key: 'workflows', label: 'Workflows' },
+        { key: 'builder', label: 'Builder', isComingSoon: true },
     ];
     
     const [isDropdownOpen, setIsDropdownOpen] = useState(false);
@@ -88,13 +88,14 @@ export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
                 {isDropdownOpen && (
                     <div className="absolute right-0 sm:left-0 mt-2 w-48 bg-white/80 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl animate-fade-in z-20">
                         <div className="p-2 space-y-1">
-                            {dropdownViews.map(({ key, label }) => (
+                            {dropdownViews.map(({ key, label, isComingSoon }) => (
                                 <button
                                     key={key}
-                                    onClick={() => handleDropdownItemClick(key)}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors rounded-md font-semibold"
+                                    onClick={() => !isComingSoon && handleDropdownItemClick(key)}
+                                    disabled={isComingSoon}
+                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors rounded-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
                                 >
-                                    {label}
+                                    {label} {isComingSoon && <em className="text-xs opacity-60">(Soon)</em>}
                                 </button>
                             ))}
                         </div>

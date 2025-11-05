@@ -36,7 +36,7 @@ const App: React.FC = () => {
   const [isGeneratingImage, setIsGeneratingImage] = useState<boolean>(false);
   const [imageError, setImageError] = useState<string | null>(null);
   
-  const [activeView, setActiveView] = useState<View>('builder');
+  const [activeView, setActiveView] = useState<View>('collection');
   const [collectionFilter, setCollectionFilter] = useState<CollectionFilter>('all');
   const [theme, setTheme] = useState<Theme>(() => {
     const savedTheme = localStorage.getItem('theme');
