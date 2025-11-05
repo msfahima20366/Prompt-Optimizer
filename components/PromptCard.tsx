@@ -58,12 +58,32 @@ interface PromptCardProps {
     onToggleFavorite?: () => void;
     onForkPrompt?: () => void;
     onRemoveFromProject?: () => void;
+    searchQuery?: string;
 }
 
-export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggleFavorite, onForkPrompt, onRemoveFromProject }) => {
+const highlightMatch = (text: string, query?: string) => {
+    if (!query || query.trim() === '') return text;
+    // Escape special characters in the query for regex
+    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
+    const regex = new RegExp(`(${escapedQuery})`, 'gi');
+    
+    return <span>{text.split(regex).map((part, index) => 
+        regex.test(part) 
+            ? <mark key={index} className="bg-amber-300 dark:bg-amber-500/50 rounded px-0.5 py-0">{part}</mark> 
+            : <span key={index}>{part}</span>
+    )}</span>;
+};
+
+
+export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggleFavorite, onForkPrompt, onRemoveFromProject, searchQuery }) => {
     const isLibraryPrompt = 'goal' in prompt;
     const userPrompt = isLibraryPrompt ? null : prompt;
+    const libraryPrompt = isLibraryPrompt ? prompt as LibraryPrompt : null;
+    
     const [isCopied, setIsCopied] = useState(false);
+
+    const isNew = libraryPrompt?.createdAt && (Date.now() - libraryPrompt.createdAt) < 7 * 24 * 60 * 60 * 1000; // 7 days
+    const isTrending = libraryPrompt && libraryPrompt.views > 2000 && libraryPrompt.shares > 400;
 
     const handleActionClick = (e: React.MouseEvent, action?: () => void) => {
         e.stopPropagation();
@@ -113,9 +133,17 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggle
         
         <div className="flex-1 flex flex-col justify-between p-5">
             <div className="flex-1 space-y-3">
-                <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg pr-12">{prompt.title}</h3>
+                <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg pr-12">
+                    {highlightMatch(prompt.title, searchQuery)}
+                </h3>
+                 {(isNew || isTrending) && (
+                    <div className="flex items-center gap-2">
+                        {isNew && <span className="text-xs font-bold text-white bg-blue-500 px-2 py-0.5 rounded-full">✨ New</span>}
+                        {isTrending && <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">🔥 Trending</span>}
+                    </div>
+                )}
                 <p className="text-gray-600 dark:text-gray-400 text-sm font-medium text-left line-clamp-4">
-                    {prompt.prompt}
+                    {highlightMatch(prompt.prompt, searchQuery)}
                 </p>
             </div>
             

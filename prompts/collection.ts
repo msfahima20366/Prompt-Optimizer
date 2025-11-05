@@ -92,6 +92,7 @@ export interface LibraryPrompt {
   views: number;
   shares: number;
   type: PromptType;
+  createdAt?: number;
 }
 
 export interface CommunityPrompt {

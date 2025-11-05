@@ -50,7 +50,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#blogging', '#seo', '#ideation'],
     views: 1250,
     shares: 312,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 2 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-cw-2',
@@ -65,7 +66,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#editing', '#rewriting', '#tone'],
     views: 980,
     shares: 155,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 15 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-cw-3',
@@ -80,7 +82,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#faq', '#support', '#website-content'],
     views: 1100,
     shares: 230,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 18 * 24 * 60 * 60 * 1000,
   },
 
   // --- MARKETING ---
@@ -97,7 +100,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#advertising', '#copywriting', '#aida'],
     views: 2100,
     shares: 520,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 5 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-mkt-2',
@@ -112,7 +116,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#social-media', '#instagram', '#content-planning'],
     views: 1800,
     shares: 450,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 12 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-mkt-3',
@@ -127,7 +132,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#branding', '#strategy', '#value-proposition'],
     views: 1400,
     shares: 280,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 25 * 24 * 60 * 60 * 1000,
   },
 
   // --- BUSINESS ---
@@ -144,7 +150,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#sales', '#networking', '#pitch'],
     views: 1950,
     shares: 400,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 9 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-biz-2',
@@ -159,7 +166,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#strategy', '#business-analysis', '#swot'],
     views: 2200,
     shares: 380,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 22 * 24 * 60 * 60 * 1000,
   },
 
   // --- CODING ---
@@ -176,7 +184,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#learning', '#debugging', '#eli5'],
     views: 3500,
     shares: 950,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 3 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-code-2',
@@ -191,7 +200,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#regex', '#validation', '#development'],
     views: 4100,
     shares: 1100,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 10 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-code-3',
@@ -206,7 +216,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#api', '#typescript', '#python', '#automation'],
     views: 2800,
     shares: 840,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 8 * 24 * 60 * 60 * 1000,
   },
 
   // --- CREATIVE ---
@@ -223,7 +234,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#writing', '#fiction', '#storytelling'],
     views: 1500,
     shares: 420,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 1 * 24 * 60 * 60 * 1000,
   },
 
   // --- EDUCATION ---
@@ -240,7 +252,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#learning', '#teaching', '#analogy'],
     views: 1800,
     shares: 350,
-    type: 'text'
+    type: 'text',
+    createdAt: Date.now() - 28 * 24 * 60 * 60 * 1000,
   },
 
   // --- IMAGE & VIDEO ---
@@ -257,7 +270,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#midjourney', '#stable-diffusion', '#image-prompt'],
     views: 5200,
     shares: 1300,
-    type: 'image'
+    type: 'image',
+    createdAt: Date.now() - 4 * 24 * 60 * 60 * 1000,
   },
   {
     id: 'lib-vid-1',
@@ -272,6 +286,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tags: ['#video', '#script', '#social-media'],
     views: 1600,
     shares: 390,
-    type: 'video'
+    type: 'video',
+    createdAt: Date.now() - 20 * 24 * 60 * 60 * 1000,
   },
 ];
