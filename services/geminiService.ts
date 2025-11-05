@@ -119,7 +119,10 @@ export const generateSimplePrompt = async (): Promise<{ baseIdea: string; fullPr
     const parsed = JSON.parse(jsonText);
     
     if (typeof parsed.baseIdea === 'string' && typeof parsed.fullPrompt === 'string') {
-        return parsed;
+        return {
+            baseIdea: cleanResponse(parsed.baseIdea),
+            fullPrompt: cleanResponse(parsed.fullPrompt),
+        };
     } else {
         throw new Error("Invalid JSON structure received from AI.");
     }

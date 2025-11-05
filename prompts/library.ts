@@ -65,7 +65,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
   {
     id: 'lib-mkt-1',
     title: 'AIDA Framework Ad Copy',
-    prompt: 'Write a compelling short-form ad copy for a new [product] using the AIDA framework.\n\n- **Attention:** Grab the attention of [target audience].\n- **Interest:** Pique their interest by highlighting a key problem or benefit.\n- **Desire:** Create desire by explaining the unique value proposition.\n- **Action:** End with a clear and urgent call to action.',
+    prompt: 'Write a compelling short-form ad copy for a new [product] using the AIDA framework.\n\n- Attention: Grab the attention of [target audience].\n- Interest: Pique their interest by highlighting a key problem or benefit.\n- Desire: Create desire by explaining the unique value proposition.\n- Action: End with a clear and urgent call to action.',
     goal: 'To create a persuasive and structured ad copy that effectively guides a potential customer towards taking a desired action.',
     category: 'Marketing',
     llmModels: ['Gemini', 'ChatGPT', 'Claude'],
@@ -123,7 +123,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
   {
     id: 'lib-biz-2',
     title: 'SWOT Analysis Assistant',
-    prompt: 'Conduct a SWOT analysis for a [type of business, e.g., local coffee shop, SaaS startup] in the current market. Provide at least 3 bullet points for each of the following categories:\n\n- **Strengths** (Internal, positive factors)\n- **Weaknesses** (Internal, negative factors)\n- **Opportunities** (External, positive factors)\n- **Threats** (External, negative factors)',
+    prompt: 'Conduct a SWOT analysis for a [type of business, e.g., local coffee shop, SaaS startup] in the current market. Provide at least 3 bullet points for each of the following categories:\n\n- Strengths (Internal, positive factors)\n- Weaknesses (Internal, negative factors)\n- Opportunities (External, positive factors)\n- Threats (External, negative factors)',
     goal: 'To perform a structured strategic analysis, identifying key internal and external factors that can impact a business.',
     category: 'Business',
     llmModels: ['Gemini', 'Claude'],
