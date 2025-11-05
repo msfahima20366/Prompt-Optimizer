@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Banana Prompts</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      // This enables the 'dark:' variants in Tailwind CSS
+      tailwind.config = {
+        darkMode: 'class',
+      }
+    </script>
+    <style>
+      :root {
+        /* Light Theme Accent Colors */
+        --gradient-from: #f59e0b; /* amber-500 */
+        --gradient-to: #eab308;   /* yellow-500 */
+      }
+
+      html.dark {
+        /* Dark Theme Accent Colors */
+        --gradient-from: #fbbf24; /* amber-400 */
+        --gradient-to: #facc15;   /* yellow-400 */
+      }
+      
+      body {
+        /* Base properties that don't change with theme */
+        transition: background-color 0.3s ease-in-out;
+      }
+
+      @keyframes fadeIn {
+        from { opacity: 0; transform: scale(0.95); }
+        to { opacity: 1; transform: scale(1); }
+      }
+      .animate-fade-in {
+        animation: fadeIn 0.2s ease-out forwards;
+      }
+      .gradient-text {
+        background-image: linear-gradient(to right, var(--gradient-from), var(--gradient-to));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .gradient-border {
+        border-image-slice: 1;
+        border-image-source: linear-gradient(to right, var(--gradient-from), var(--gradient-to));
+      }
+      /* Custom scrollbar for better aesthetics */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+      ::-webkit-scrollbar-track {
+        background: transparent;
+      }
+      html.dark ::-webkit-scrollbar-thumb {
+        background-color: #4b5563; /* gray-600 */
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+      html.dark ::-webkit-scrollbar-thumb:hover {
+        background-color: #6b7280; /* gray-500 */
+      }
+      html:not(.dark) ::-webkit-scrollbar-thumb {
+        background-color: #d1d5db; /* gray-300 */
+        border-radius: 4px;
+        border: 2px solid transparent;
+        background-clip: content-box;
+      }
+      html:not(.dark) ::-webkit-scrollbar-thumb:hover {
+        background-color: #9ca3af; /* gray-400 */
+      }
+    </style>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+</head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
