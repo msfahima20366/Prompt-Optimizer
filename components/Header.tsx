@@ -76,7 +76,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onShowHistor
       <div className="flex items-center space-x-4">
         <AppIcon />
         <h1 className="text-4xl md:text-5xl font-extrabold tracking-wider gradient-text">
-          Banana Prompts
+          Prompt Matrix
         </h1>
       </div>
       <div className="flex items-center gap-2 sm:gap-4">
