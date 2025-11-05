@@ -528,7 +528,7 @@ const App: React.FC = () => {
             {renderActiveView()}
           </main>
           <footer className="text-center text-xs text-gray-500 dark:text-gray-500">
-            <p>Powered by Gemini. Created for the new era of AI.</p>
+            <p>Create By @Rakib Founder of AI Learn Hub</p>
           </footer>
         </div>
       </div>
