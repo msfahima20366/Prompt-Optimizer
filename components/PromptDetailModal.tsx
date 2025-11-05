@@ -127,20 +127,68 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
         if (model === 'Gemini') {
             const url = `https://gemini.google.com/app?prompt=${encodeURIComponent(promptText)}`;
             window.open(url, '_blank', 'noopener,noreferrer');
-        } else {
-            navigator.clipboard.writeText(promptText).then(() => {
-                setCopyNotification(`প্রম্পট কপি হয়েছে! ${model} খুলছে...`);
-                setTimeout(() => setCopyNotification(null), 3000);
-                
-                let url = '';
-                if (model === 'ChatGPT') {
-                    url = 'https://chat.openai.com/';
-                } else if (model === 'Claude') {
-                    url = 'https://claude.ai/chats';
-                }
-                window.open(url, '_blank', 'noopener,noreferrer');
-            });
+            return;
         }
+
+        const copyToClipboard = async (text: string): Promise<boolean> => {
+            // Modern API first
+            if (navigator.clipboard && window.isSecureContext) {
+                try {
+                    await navigator.clipboard.writeText(text);
+                    return true;
+                } catch (err) {
+                    console.error('Clipboard API failed, falling back.', err);
+                }
+            }
+
+            // Fallback for older browsers
+            const textArea = document.createElement("textarea");
+            textArea.value = text;
+            textArea.style.position = "fixed";
+            textArea.style.top = "0";
+            textArea.style.left = "0";
+            textArea.style.width = "2em";
+            textArea.style.height = "2em";
+            textArea.style.padding = "0";
+            textArea.style.border = "none";
+            textArea.style.outline = "none";
+            textArea.style.boxShadow = "none";
+            textArea.style.background = "transparent";
+
+            document.body.appendChild(textArea);
+            textArea.focus();
+            textArea.select();
+
+            let success = false;
+            try {
+                success = document.execCommand('copy');
+                if (!success) {
+                   console.error('Fallback: document.execCommand was unsuccessful');
+                }
+            } catch (err) {
+                console.error('Fallback: an error occurred copying text', err);
+            }
+
+            document.body.removeChild(textArea);
+            return success;
+        };
+
+        copyToClipboard(promptText).then(success => {
+            if (success) {
+                setCopyNotification(`প্রম্পট কপি হয়েছে! ${model} খুলছে...`);
+            } else {
+                setCopyNotification(`কপি করতে সমস্যা হয়েছে। অনুগ্রহ করে ম্যানুয়ালি কপি করুন।`);
+            }
+            setTimeout(() => setCopyNotification(null), 3000);
+
+            let url = '';
+            if (model === 'ChatGPT') {
+                url = 'https://chat.openai.com/';
+            } else if (model === 'Claude') {
+                url = 'https://claude.ai/chats';
+            }
+            window.open(url, '_blank', 'noopener,noreferrer');
+        });
     };
     
     const actionButtonClasses = "w-full flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors";
