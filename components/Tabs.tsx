@@ -27,12 +27,12 @@ export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
     const mainViews: { key: View, label: string }[] = [
         { key: 'collection', label: 'Collection' },
         { key: 'optimizer', label: 'Optimizer' },
-    ];
-
-    const dropdownViews: { key: View, label: string, isComingSoon?: boolean }[] = [
         { key: 'community', label: 'Community' },
         { key: 'projects', label: 'Projects' },
         { key: 'workflows', label: 'Workflows' },
+    ];
+
+    const dropdownViews: { key: View, label: string, isComingSoon?: boolean }[] = [
         { key: 'builder', label: 'Builder', isComingSoon: true },
     ];
     
