@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Prompt, LibraryPrompt } from '../prompts/collection';
 
 // --- ICONS ---
@@ -8,6 +8,17 @@ const ForkIcon: React.FC = () => (
     </svg>
 );
 
+const CopyIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
+);
+
+const CheckIcon: React.FC = () => (
+  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+  </svg>
+);
 
 const StarIcon: React.FC<{ isFavorite: boolean }> = ({ isFavorite }) => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
@@ -44,11 +55,21 @@ interface PromptCardProps {
 export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggleFavorite, onForkPrompt, onRemoveFromProject }) => {
     const isLibraryPrompt = 'goal' in prompt;
     const userPrompt = isLibraryPrompt ? null : prompt;
+    const [isCopied, setIsCopied] = useState(false);
 
     const handleActionClick = (e: React.MouseEvent, action?: () => void) => {
         e.stopPropagation();
         action?.();
     };
+
+    const handleCopy = (e: React.MouseEvent) => {
+        e.stopPropagation();
+        navigator.clipboard.writeText(prompt.prompt);
+        setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
+    };
+
+    const buttonClasses = "p-1.5 bg-gray-100 dark:bg-gray-800/80 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors";
 
     return (
       <div
@@ -67,11 +88,16 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggle
                     <RemoveIcon />
                 </button>
             ) : isLibraryPrompt ? (
-                <button onClick={(e) => handleActionClick(e, onForkPrompt)} className="p-1.5 bg-gray-100 dark:bg-gray-800/80 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Fork to Collection">
-                    <ForkIcon />
-                </button>
+                <div className="flex items-center gap-2">
+                    <button onClick={handleCopy} className={buttonClasses} title="Copy Prompt">
+                        {isCopied ? <CheckIcon /> : <CopyIcon />}
+                    </button>
+                    <button onClick={(e) => handleActionClick(e, onForkPrompt)} className={buttonClasses} title="Fork to Collection">
+                        <ForkIcon />
+                    </button>
+                </div>
             ) : (
-                <button onClick={(e) => handleActionClick(e, onToggleFavorite)} className="p-1.5 bg-gray-100 dark:bg-gray-800/80 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors" title="Toggle Favorite">
+                <button onClick={(e) => handleActionClick(e, onToggleFavorite)} className={buttonClasses} title="Toggle Favorite">
                     <StarIcon isFavorite={!!userPrompt?.isFavorite} />
                 </button>
             )}

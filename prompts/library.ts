@@ -30,7 +30,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.8,
     tags: ['#blogging', '#seo', '#ideation'],
     views: 1250,
-    shares: 312
+    shares: 312,
+    type: 'text'
   },
   {
     id: 'lib-cw-2',
@@ -44,7 +45,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.7,
     tags: ['#editing', '#rewriting', '#tone'],
     views: 980,
-    shares: 155
+    shares: 155,
+    type: 'text'
   },
   {
     id: 'lib-cw-3',
@@ -58,7 +60,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.6,
     tags: ['#faq', '#support', '#website-content'],
     views: 1100,
-    shares: 230
+    shares: 230,
+    type: 'text'
   },
 
   // --- MARKETING ---
@@ -74,7 +77,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.9,
     tags: ['#advertising', '#copywriting', '#aida'],
     views: 2100,
-    shares: 520
+    shares: 520,
+    type: 'text'
   },
   {
     id: 'lib-mkt-2',
@@ -88,7 +92,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.8,
     tags: ['#social-media', '#instagram', '#content-planning'],
     views: 1800,
-    shares: 450
+    shares: 450,
+    type: 'text'
   },
   {
     id: 'lib-mkt-3',
@@ -102,7 +107,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.6,
     tags: ['#branding', '#strategy', '#value-proposition'],
     views: 1400,
-    shares: 280
+    shares: 280,
+    type: 'text'
   },
 
   // --- BUSINESS ---
@@ -118,7 +124,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.7,
     tags: ['#sales', '#networking', '#pitch'],
     views: 1950,
-    shares: 400
+    shares: 400,
+    type: 'text'
   },
   {
     id: 'lib-biz-2',
@@ -132,7 +139,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.6,
     tags: ['#strategy', '#business-analysis', '#swot'],
     views: 2200,
-    shares: 380
+    shares: 380,
+    type: 'text'
   },
 
   // --- CODING ---
@@ -148,7 +156,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.5,
     tags: ['#learning', '#debugging', '#eli5'],
     views: 3500,
-    shares: 950
+    shares: 950,
+    type: 'text'
   },
   {
     id: 'lib-code-2',
@@ -162,7 +171,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.4,
     tags: ['#regex', '#validation', '#development'],
     views: 4100,
-    shares: 1100
+    shares: 1100,
+    type: 'text'
   },
   {
     id: 'lib-code-3',
@@ -176,7 +186,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.3,
     tags: ['#api', '#typescript', '#python', '#automation'],
     views: 2800,
-    shares: 840
+    shares: 840,
+    type: 'text'
   },
 
   // --- CREATIVE ---
@@ -192,7 +203,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 1.0,
     tags: ['#writing', '#fiction', '#storytelling'],
     views: 1500,
-    shares: 420
+    shares: 420,
+    type: 'text'
   },
 
   // --- EDUCATION ---
@@ -208,7 +220,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.6,
     tags: ['#learning', '#teaching', '#analogy'],
     views: 1800,
-    shares: 350
+    shares: 350,
+    type: 'text'
   },
 
   // --- IMAGE & VIDEO ---
@@ -224,7 +237,8 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.8,
     tags: ['#midjourney', '#stable-diffusion', '#image-prompt'],
     views: 5200,
-    shares: 1300
+    shares: 1300,
+    type: 'image'
   },
   {
     id: 'lib-vid-1',
@@ -238,6 +252,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     temperature: 0.7,
     tags: ['#video', '#script', '#social-media'],
     views: 1600,
-    shares: 390
+    shares: 390,
+    type: 'video'
   },
 ];

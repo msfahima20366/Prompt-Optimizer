@@ -27,6 +27,7 @@ export interface LibraryPrompt {
   tags: string[];
   views: number;
   shares: number;
+  type?: PromptType;
 }
 
 

@@ -28,6 +28,8 @@ const checkSearchMatch = (prompt: Prompt | LibraryPrompt, query: string): boolea
 };
 
 const LLM_MODELS: LLMModel[] = ['Gemini', 'ChatGPT', 'Claude'];
+const PROMPT_TYPE_OPTIONS = ['All', 'Text-based Prompt', 'Image Generate Prompt', 'Video Generate Prompt'];
+
 
 const TypeFilterButton: React.FC<{
   label: string;
@@ -49,7 +51,8 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
   const [llmFilter, setLlmFilter] = useState<LLMModel | 'All'>('All');
   const [techniqueFilter, setTechniqueFilter] = useState<PromptTechnique | 'All'>('All');
   const [categoryFilter, setCategoryFilter] = useState<string>('All');
-  const [typeFilter, setTypeFilter] = useState<'all' | PromptType>('all');
+  const [libraryTypeFilter, setLibraryTypeFilter] = useState<string>('All');
+  const [userCollectionTypeFilter, setUserCollectionTypeFilter] = useState<'all' | PromptType>('all');
 
   const filteredLibraryPrompts = useMemo(() => {
     if (collectionFilter === 'favorites') return []; // Don't show library when viewing favorites
@@ -57,19 +60,24 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
         if (llmFilter !== 'All' && !p.llmModels.includes(llmFilter)) return false;
         if (techniqueFilter !== 'All' && p.technique !== techniqueFilter) return false;
         if (categoryFilter !== 'All' && p.category !== categoryFilter) return false;
+        if (libraryTypeFilter !== 'All') {
+            if (libraryTypeFilter === 'Text-based Prompt' && p.type !== 'text') return false;
+            if (libraryTypeFilter === 'Image Generate Prompt' && p.type !== 'image') return false;
+            if (libraryTypeFilter === 'Video Generate Prompt' && p.type !== 'video') return false;
+        }
         if (!checkSearchMatch(p, searchQuery)) return false;
         return true;
     });
-  }, [searchQuery, llmFilter, techniqueFilter, categoryFilter, collectionFilter]);
+  }, [searchQuery, llmFilter, techniqueFilter, categoryFilter, libraryTypeFilter, collectionFilter]);
 
   const filteredUserCollection = useMemo(() => {
     return userCollection.filter(p => {
         if (collectionFilter === 'favorites' && !p.isFavorite) return false;
-        if (typeFilter !== 'all' && p.type !== typeFilter) return false;
+        if (userCollectionTypeFilter !== 'all' && p.type !== userCollectionTypeFilter) return false;
         if (!checkSearchMatch(p, searchQuery)) return false;
         return true;
     });
-  }, [userCollection, searchQuery, collectionFilter, typeFilter]);
+  }, [userCollection, searchQuery, collectionFilter, userCollectionTypeFilter]);
 
 
   const noPromptsFound = filteredLibraryPrompts.length === 0 && filteredUserCollection.length === 0;
@@ -92,10 +100,11 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
                   className="w-full bg-white dark:bg-gray-900/50 border-2 border-gray-300 dark:border-gray-700 rounded-lg shadow-inner pl-10 pr-4 py-3 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
               />
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <FilterDropdown label="LLM Model" options={['All', ...LLM_MODELS]} selectedValue={llmFilter} onValueChange={setLlmFilter as (val: string) => void} />
               <FilterDropdown label="Technique" options={['All', ...PROMPT_TECHNIQUES]} selectedValue={techniqueFilter} onValueChange={setTechniqueFilter as (val: string) => void} />
               <FilterDropdown label="Category" options={['All', ...LIBRARY_CATEGORIES]} selectedValue={categoryFilter} onValueChange={setCategoryFilter} />
+              <FilterDropdown label="Type" options={PROMPT_TYPE_OPTIONS} selectedValue={libraryTypeFilter} onValueChange={setLibraryTypeFilter} />
           </div>
         </div>
       )}
@@ -130,8 +139,8 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
                         <TypeFilterButton 
                             key={type}
                             label={type.charAt(0).toUpperCase() + type.slice(1)}
-                            isActive={typeFilter === type}
-                            onClick={() => setTypeFilter(type)}
+                            isActive={userCollectionTypeFilter === type}
+                            onClick={() => setUserCollectionTypeFilter(type)}
                         />
                     ))}
                 </div>
