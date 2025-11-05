@@ -68,7 +68,9 @@ export interface User {
 }
 
 export interface Prompt {
-  id: string;
+  id: string; // Unique ID for this version
+  versionGroupId: string; // ID shared by all versions of the same prompt
+  createdAt: number; // Timestamp for this version
   title: string;
   prompt: string;
   isFavorite: boolean;

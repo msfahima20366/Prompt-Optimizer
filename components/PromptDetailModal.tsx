@@ -1,5 +1,8 @@
 
-import React, { useState, useEffect, useRef } from 'react';
+
+
+// Fix: Import `useMemo` from `react` to resolve the "Cannot find name 'useMemo'" error.
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { Prompt, LibraryPrompt, User } from '../prompts/collection';
 
 // Icons
@@ -46,9 +49,10 @@ const GeminiIcon: React.FC = () => (
 
 interface PromptDetailModalProps {
     prompt: Prompt | LibraryPrompt;
+    userCollection: Prompt[];
     onClose: () => void;
     onEdit?: (prompt: Prompt) => void;
-    onDelete?: (promptId: string) => void;
+    onDelete?: (prompt: Prompt) => void;
     onUse: (prompt: Prompt | LibraryPrompt) => void;
     onToggleFavorite?: (promptId: string) => void;
     onSave: (prompt: {title: string, prompt: string}) => void;
@@ -80,15 +84,23 @@ const LLMButton: React.FC<{
 );
 
 
-export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, onClose, onEdit, onDelete, onUse, onToggleFavorite, onSave, currentUser, onShare }) => {
+export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, userCollection, onClose, onEdit, onDelete, onUse, onToggleFavorite, onSave, currentUser, onShare }) => {
     const [isCopied, setIsCopied] = useState(false);
     const [selectedSnippet, setSelectedSnippet] = useState('');
     const [copyNotification, setCopyNotification] = useState<string | null>(null);
+    const [viewedVersion, setViewedVersion] = useState(prompt);
     const promptDisplayRef = useRef<HTMLDivElement>(null);
 
-    const isLibraryPrompt = 'goal' in prompt;
-    const userPrompt = isLibraryPrompt ? null : prompt as Prompt;
-    const libraryPrompt = isLibraryPrompt ? prompt as LibraryPrompt : null;
+    const isLibraryPrompt = 'goal' in viewedVersion;
+    const userPrompt = isLibraryPrompt ? null : viewedVersion as Prompt;
+    const libraryPrompt = isLibraryPrompt ? viewedVersion as LibraryPrompt : null;
+
+    const allVersions = useMemo(() => {
+        if (isLibraryPrompt) return [];
+        return userCollection
+            .filter(p => p.versionGroupId === (prompt as Prompt).versionGroupId)
+            .sort((a, b) => b.createdAt - a.createdAt);
+    }, [userCollection, prompt, isLibraryPrompt]);
 
     useEffect(() => {
         const handleSelectionChange = () => {
@@ -111,18 +123,18 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
     }, [isCopied]);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(prompt.prompt);
+        navigator.clipboard.writeText(viewedVersion.prompt);
         setIsCopied(true);
     };
 
     const handleSaveSnippet = () => {
         if (!selectedSnippet) return;
-        onSave({ title: `${prompt.title} (Snippet)`, prompt: selectedSnippet });
+        onSave({ title: `${viewedVersion.title} (Snippet)`, prompt: selectedSnippet });
         onClose();
     };
 
     const handleLaunch = (model: 'Gemini' | 'ChatGPT' | 'Claude') => {
-        const promptText = prompt.prompt;
+        const promptText = viewedVersion.prompt;
     
         if (model === 'Gemini') {
             const url = `https://gemini.google.com/app?prompt=${encodeURIComponent(promptText)}`;
@@ -131,62 +143,38 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
         }
 
         const copyToClipboard = async (text: string): Promise<boolean> => {
-            // Modern API first
             if (navigator.clipboard && window.isSecureContext) {
                 try {
                     await navigator.clipboard.writeText(text);
                     return true;
-                } catch (err) {
-                    console.error('Clipboard API failed, falling back.', err);
-                }
+                } catch (err) { console.error('Clipboard API failed, falling back.', err); }
             }
-
-            // Fallback for older browsers
             const textArea = document.createElement("textarea");
             textArea.value = text;
-            textArea.style.position = "fixed";
-            textArea.style.top = "0";
-            textArea.style.left = "0";
-            textArea.style.width = "2em";
-            textArea.style.height = "2em";
-            textArea.style.padding = "0";
-            textArea.style.border = "none";
-            textArea.style.outline = "none";
-            textArea.style.boxShadow = "none";
-            textArea.style.background = "transparent";
-
+            textArea.style.position = "fixed"; textArea.style.opacity = "0";
             document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-
+            textArea.focus(); textArea.select();
             let success = false;
             try {
                 success = document.execCommand('copy');
-                if (!success) {
-                   console.error('Fallback: document.execCommand was unsuccessful');
-                }
             } catch (err) {
                 console.error('Fallback: an error occurred copying text', err);
             }
-
             document.body.removeChild(textArea);
             return success;
         };
 
         copyToClipboard(promptText).then(success => {
             if (success) {
-                setCopyNotification(`প্রম্পট কপি হয়েছে! ${model} খুলছে...`);
+                setCopyNotification(`Prompt copied! Opening ${model}...`);
             } else {
-                setCopyNotification(`কপি করতে সমস্যা হয়েছে। অনুগ্রহ করে ম্যানুয়ালি কপি করুন।`);
+                setCopyNotification(`Failed to copy. Please copy manually.`);
             }
             setTimeout(() => setCopyNotification(null), 3000);
 
             let url = '';
-            if (model === 'ChatGPT') {
-                url = 'https://chat.openai.com/';
-            } else if (model === 'Claude') {
-                url = 'https://claude.ai/chats';
-            }
+            if (model === 'ChatGPT') url = 'https://chat.openai.com/';
+            else if (model === 'Claude') url = 'https://claude.ai/chats';
             window.open(url, '_blank', 'noopener,noreferrer');
         });
     };
@@ -198,7 +186,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
         <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in" onClick={onClose}>
             <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-fuchsia-500/30 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
                 <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700/50 flex-shrink-0">
-                    <h2 className="text-xl font-bold gradient-text truncate pr-8">{prompt.title}</h2>
+                    <h2 className="text-xl font-bold gradient-text truncate pr-8">{viewedVersion.title}</h2>
                     <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
                         <CloseIcon />
                     </button>
@@ -207,7 +195,7 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
                 <div className="flex flex-col md:flex-row flex-1 min-h-0">
                     <div className="w-full md:w-3/5 flex flex-col p-6 space-y-4 overflow-y-auto">
                         <div ref={promptDisplayRef} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg flex-1">
-                           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap selection:bg-indigo-500/50">{prompt.prompt}</p>
+                           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap selection:bg-indigo-500/50">{viewedVersion.prompt}</p>
                         </div>
                         <div className="flex items-center gap-3 text-sm flex-wrap">
                             <button onClick={handleCopy} className="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors">
@@ -223,34 +211,30 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
                     </div>
                     
                     <div className="w-full md:w-2/5 bg-gray-50/50 dark:bg-gray-900/40 p-6 space-y-5 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700/50 overflow-y-auto">
+                        {allVersions.length > 1 && (
+                            <div>
+                                <label htmlFor="version-history" className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Version History</label>
+                                <select 
+                                    id="version-history"
+                                    value={viewedVersion.id}
+                                    onChange={e => setViewedVersion(allVersions.find(v => v.id === e.target.value) || viewedVersion)}
+                                    className="mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+                                >
+                                    {allVersions.map((v, i) => (
+                                        <option key={v.id} value={v.id}>
+                                            Version {allVersions.length - i} ({new Date(v.createdAt).toLocaleString()})
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        )}
                         <MetaDataItem label="Goal" value={isLibraryPrompt ? libraryPrompt.goal : 'A prompt from your personal collection.'} />
-                        {isLibraryPrompt && <MetaDataItem label="Category" value={libraryPrompt.category} />}
+                        {libraryPrompt?.category && <MetaDataItem label="Category" value={libraryPrompt.category} />}
                         {userPrompt?.category && <MetaDataItem label="Category" value={userPrompt.category} />}
 
-                        {isLibraryPrompt && <MetaDataItem label="Technique" value={libraryPrompt.technique} />}
-                        {isLibraryPrompt && <MetaDataItem label="Suggested Temp." value={libraryPrompt.temperature.toFixed(1)} />}
-                        {isLibraryPrompt && <MetaDataItem label="Approx. Tokens" value={libraryPrompt.tokens} />}
-
-                        {isLibraryPrompt && (
-                           <div>
-                               <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider mb-1">Models</p>
-                               <div className="flex flex-wrap gap-2">
-                                   {libraryPrompt.llmModels.map(model => (
-                                       <span key={model} className="text-sm font-semibold bg-gray-200 text-gray-800 dark:bg-gray-700/80 dark:text-gray-200 px-3 py-1 rounded-full">{model}</span>
-                                   ))}
-                               </div>
-                           </div>
-                        )}
-                         {isLibraryPrompt && (
-                           <div>
-                               <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider mb-1">Tags</p>
-                               <div className="flex flex-wrap gap-2">
-                                   {libraryPrompt.tags.map(tag => (
-                                       <span key={tag} className="text-sm font-semibold bg-gray-200 text-gray-800 dark:bg-gray-700/80 dark:text-gray-200 px-3 py-1 rounded-full">{tag}</span>
-                                   ))}
-                               </div>
-                           </div>
-                        )}
+                        {libraryPrompt?.technique && <MetaDataItem label="Technique" value={libraryPrompt.technique} />}
+                        {libraryPrompt?.temperature && <MetaDataItem label="Suggested Temp." value={libraryPrompt.temperature.toFixed(1)} />}
+                        {libraryPrompt?.tokens && <MetaDataItem label="Approx. Tokens" value={libraryPrompt.tokens} />}
                         
                         <div className="pt-4 border-t border-gray-200 dark:border-gray-700/50 space-y-3">
                             <div>
@@ -258,39 +242,14 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
                                     Launch In
                                 </p>
                                 <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    {compatibleModels.includes('Gemini') && (
-                                        <LLMButton
-                                            Icon={GeminiIcon}
-                                            label="Gemini"
-                                            tooltip="Best for creative tasks and complex reasoning. (Pre-fills prompt)"
-                                            onClick={() => handleLaunch('Gemini')}
-                                        />
-                                    )}
-                                    {compatibleModels.includes('ChatGPT') && (
-                                        <LLMButton
-                                            Icon={GeminiIcon}
-                                            label="ChatGPT"
-                                            tooltip="Great all-rounder for a variety of tasks. (Copies prompt)"
-                                            onClick={() => handleLaunch('ChatGPT')}
-                                        />
-                                    )}
-                                    {compatibleModels.includes('Claude') && (
-                                        <LLMButton
-                                            Icon={GeminiIcon}
-                                            label="Claude"
-                                            tooltip="Excellent for long-form content and detailed analysis. (Copies prompt)"
-                                            onClick={() => handleLaunch('Claude')}
-                                        />
-                                    )}
+                                    {compatibleModels.includes('Gemini') && ( <LLMButton Icon={GeminiIcon} label="Gemini" tooltip="Best for creative tasks and complex reasoning. (Pre-fills prompt)" onClick={() => handleLaunch('Gemini')} /> )}
+                                    {compatibleModels.includes('ChatGPT') && ( <LLMButton Icon={GeminiIcon} label="ChatGPT" tooltip="Great all-rounder for a variety of tasks. (Copies prompt)" onClick={() => handleLaunch('ChatGPT')} /> )}
+                                    {compatibleModels.includes('Claude') && ( <LLMButton Icon={GeminiIcon} label="Claude" tooltip="Excellent for long-form content and detailed analysis. (Copies prompt)" onClick={() => handleLaunch('Claude')} /> )}
                                 </div>
-                                {copyNotification && (
-                                    <p className="text-center text-sm text-indigo-500 dark:text-indigo-400 mt-2 animate-fade-in">
-                                        {copyNotification}
-                                    </p>
-                                )}
+                                {copyNotification && ( <p className="text-center text-sm text-indigo-500 dark:text-indigo-400 mt-2 animate-fade-in">{copyNotification}</p> )}
                             </div>
 
-                             <button onClick={() => onSave({title: prompt.title, prompt: prompt.prompt})} className={actionButtonClasses}>
+                             <button onClick={() => onSave({title: viewedVersion.title, prompt: viewedVersion.prompt})} className={actionButtonClasses}>
                                 <SaveIcon />
                                 Save a Copy
                             </button>
@@ -314,9 +273,9 @@ export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, on
                                         <EditIcon />
                                         Edit
                                     </button>
-                                    <button onClick={() => onDelete(userPrompt.id)} className="w-full flex items-center justify-center px-4 py-2 bg-red-100 text-red-700 dark:bg-red-800/50 dark:text-red-300 font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-700/50 hover:text-red-800 dark:hover:text-white transition-colors">
+                                    <button onClick={() => onDelete(userPrompt)} className="w-full flex items-center justify-center px-4 py-2 bg-red-100 text-red-700 dark:bg-red-800/50 dark:text-red-300 font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-700/50 hover:text-red-800 dark:hover:text-white transition-colors">
                                         <TrashIcon />
-                                        Delete Prompt
+                                        Delete Prompt & Versions
                                     </button>
                                 </>
                             )}

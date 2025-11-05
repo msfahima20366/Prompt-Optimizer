@@ -5,7 +5,7 @@ import { PROMPT_TECHNIQUES } from '../prompts/library';
 interface EditPromptModalProps {
   prompt: Prompt;
   categories: string[];
-  onSave: (updatedPrompt: Prompt) => void;
+  onSave: (originalPrompt: Prompt, updatedData: Omit<Prompt, 'id' | 'versionGroupId' | 'createdAt' | 'isFavorite' | 'isShared'>) => void;
   onCancel: () => void;
 }
 
@@ -37,8 +37,7 @@ export const EditPromptModal: React.FC<EditPromptModalProps> = ({ prompt, catego
 
   const handleSave = () => {
     const finalCategory = newCategory.trim() || selectedCategory;
-    onSave({
-      ...prompt,
+    onSave(prompt, {
       title,
       prompt: promptText,
       category: finalCategory,
@@ -51,7 +50,7 @@ export const EditPromptModal: React.FC<EditPromptModalProps> = ({ prompt, catego
   return (
     <div className="fixed inset-0 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 z-50">
       <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-fuchsia-500/30 rounded-2xl shadow-2xl p-6 w-full max-w-lg space-y-4 animate-fade-in max-h-[90vh] overflow-y-auto">
-        <h2 className="text-2xl font-bold gradient-text">Edit Prompt</h2>
+        <h2 className="text-2xl font-bold gradient-text">Save as New Version</h2>
         
         <div className="flex items-center space-x-4">
           <div className="w-24 h-24 bg-gray-100 dark:bg-gray-800 rounded-lg flex-shrink-0">

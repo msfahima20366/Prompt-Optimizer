@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics';
+type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix';
 
 interface TabsProps {
   activeView: View;
@@ -34,6 +34,7 @@ export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
         { key: 'community', label: 'Community' },
         { key: 'projects', label: 'Projects' },
         { key: 'workflows', label: 'Workflows' },
+        { key: 'matrix', label: 'Matrix' },
         { key: 'builder', label: 'Builder', isComingSoon: true },
     ];
     

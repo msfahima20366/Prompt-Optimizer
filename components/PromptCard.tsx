@@ -59,11 +59,14 @@ interface PromptCardProps {
     onForkPrompt?: () => void;
     onRemoveFromProject?: () => void;
     searchQuery?: string;
+    versionCount?: number;
+    selectMode?: boolean;
+    isSelected?: boolean;
+    onSelect?: () => void;
 }
 
 const highlightMatch = (text: string, query?: string) => {
     if (!query || query.trim() === '') return text;
-    // Escape special characters in the query for regex
     const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
     const regex = new RegExp(`(${escapedQuery})`, 'gi');
     
@@ -75,15 +78,25 @@ const highlightMatch = (text: string, query?: string) => {
 };
 
 
-export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggleFavorite, onForkPrompt, onRemoveFromProject, searchQuery }) => {
+export const PromptCard: React.FC<PromptCardProps> = ({ 
+    prompt, 
+    onView, 
+    onToggleFavorite, 
+    onForkPrompt, 
+    onRemoveFromProject, 
+    searchQuery, 
+    versionCount,
+    selectMode = false,
+    isSelected = false,
+    onSelect
+}) => {
     const isLibraryPrompt = 'goal' in prompt;
     const userPrompt = isLibraryPrompt ? null : prompt;
-    const libraryPrompt = isLibraryPrompt ? prompt as LibraryPrompt : null;
     
     const [isCopied, setIsCopied] = useState(false);
 
-    const isNew = libraryPrompt?.createdAt && (Date.now() - libraryPrompt.createdAt) < 7 * 24 * 60 * 60 * 1000; // 7 days
-    const isTrending = libraryPrompt && libraryPrompt.views > 2000 && libraryPrompt.shares > 400;
+    const isNew = 'createdAt' in prompt && prompt.createdAt && (Date.now() - prompt.createdAt) < 7 * 24 * 60 * 60 * 1000; // 7 days
+    const isTrending = isLibraryPrompt && prompt.views > 2000 && prompt.shares > 400;
 
     const handleActionClick = (e: React.MouseEvent, action?: () => void) => {
         e.stopPropagation();
@@ -97,13 +110,33 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggle
         setTimeout(() => setIsCopied(false), 2000);
     };
 
+    const handleCardClick = () => {
+        if (selectMode) {
+            onSelect?.();
+        } else {
+            onView?.();
+        }
+    };
+
     const buttonClasses = "p-1.5 bg-gray-100 dark:bg-gray-800/80 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors";
+    const selectedClasses = isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'border-gray-200 dark:border-gray-700/60 hover:border-amber-500/50';
 
     return (
       <div
-          onClick={onView}
-          className="relative group w-full flex flex-col bg-white/50 dark:bg-gray-900/50 rounded-2xl border-2 border-gray-200 dark:border-gray-700/60 shadow-lg hover:shadow-yellow-500/20 hover:border-amber-500/50 transition-all duration-300 ease-in-out transform hover:-translate-y-1.5 cursor-pointer overflow-hidden"
+          onClick={handleCardClick}
+          className={`relative group w-full flex flex-col bg-white/50 dark:bg-gray-900/50 rounded-2xl border-2 ${selectedClasses} shadow-lg hover:shadow-yellow-500/20 transition-all duration-300 ease-in-out transform hover:-translate-y-1.5 cursor-pointer overflow-hidden`}
       >
+        {selectMode && (
+             <div className="absolute top-4 left-4 z-20">
+                <input
+                    type="checkbox"
+                    checked={isSelected}
+                    onChange={e => e.stopPropagation()} 
+                    className="h-5 w-5 rounded border-gray-400 text-indigo-600 focus:ring-indigo-500 bg-white/50 dark:bg-gray-800"
+                />
+            </div>
+        )}
+
         {userPrompt?.type === 'image' && userPrompt.imageUrl && (
           <div className="aspect-video bg-gray-200 dark:bg-gray-800">
             <img src={userPrompt.imageUrl} alt={userPrompt.title} className="w-full h-full object-cover" />
@@ -125,7 +158,7 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggle
                     </button>
                 </div>
             ) : (
-                <button onClick={(e) => handleActionClick(e, onToggleFavorite)} className={buttonClasses} title="Toggle Favorite">
+                !selectMode && <button onClick={(e) => handleActionClick(e, onToggleFavorite)} className={buttonClasses} title="Toggle Favorite">
                     <StarIcon isFavorite={!!userPrompt?.isFavorite} />
                 </button>
             )}
@@ -150,7 +183,14 @@ export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggle
             <div className="mt-4 flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700/50">
                 <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold">
                     {isLibraryPrompt && prompt.llmModels.map(model => <LLMIcon key={model} model={model} />)}
-                    {!isLibraryPrompt && <span className="text-amber-600 dark:text-amber-400">In Your Collection</span>}
+                    {!isLibraryPrompt && (
+                        <div className="flex items-center gap-2">
+                            <span className="text-amber-600 dark:text-amber-400">In Your Collection</span>
+                            {versionCount && versionCount > 1 && (
+                                <span className="text-xs font-bold text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">v{versionCount}</span>
+                            )}
+                        </div>
+                    )}
                 </div>
                  <button onClick={(e) => handleActionClick(e, onView)} className="text-xs font-bold px-3 py-1.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                     View

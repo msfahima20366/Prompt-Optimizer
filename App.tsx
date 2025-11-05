@@ -23,8 +23,9 @@ import { OptimizerView } from './components/OptimizerView';
 import { SaveContextModal } from './components/SaveContextModal';
 import { WorkspaceView } from './components/WorkspaceView';
 import { AnalyticsDashboardView } from './components/AnalyticsDashboardView';
+import { MatrixView } from './components/MatrixView';
 
-type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics';
+type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix';
 type CollectionFilter = 'all' | 'favorites';
 type Theme = 'light' | 'dark';
 
@@ -76,7 +77,7 @@ const App: React.FC = () => {
   const [viewingPrompt, setViewingPrompt] = useState<Prompt | LibraryPrompt | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isProjectModalOpen, setIsProjectModalOpen] = useState<Project | {} | null>(null);
-  const [isAddPromptsModalOpen, setAddPromptsModalOpen] = useState<boolean>(false);
+  const [isAddPromptsModalOpen, setAddPromptsModalOpen] = useState<Project | boolean>(false); // Can be true or a project
   const [isWorkflowModalOpen, setIsWorkflowModalOpen] = useState<Workflow | {} | null>(null);
   const [runningWorkflow, setRunningWorkflow] = useState<Workflow | null>(null);
   const [isSaveContextModalOpen, setIsSaveContextModalOpen] = useState<boolean>(false);
@@ -84,6 +85,10 @@ const App: React.FC = () => {
   // Project/Workflow specific state
   const [viewingProject, setViewingProject] = useState<Project | null>(null);
   const [viewingWorkflow, setViewingWorkflow] = useState<Workflow | null>(null);
+  
+  // Bulk actions state
+  const [selectedPromptIds, setSelectedPromptIds] = useState<Set<string>>(new Set());
+
 
   const [userCollection, setUserCollection] = useState<Prompt[]>(() => {
     try { const saved = localStorage.getItem('userCollection'); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
@@ -192,8 +197,19 @@ const App: React.FC = () => {
   }, [addToHistory]);
 
   const handleSaveNewPrompt = useCallback((title: string, category: string, type: PromptType, technique: PromptTechnique, promptText: string, imageUrl?: string) => {
+    const newId = `user-${Date.now()}`;
     const newPrompt: Prompt = {
-      id: `user-${Date.now()}`, title, prompt: promptText, isFavorite: false, category, type, technique, imageUrl, isShared: false,
+      id: newId,
+      versionGroupId: newId,
+      createdAt: Date.now(),
+      title, 
+      prompt: promptText, 
+      isFavorite: false, 
+      category, 
+      type, 
+      technique, 
+      imageUrl, 
+      isShared: false,
     };
     setUserCollection(prev => [newPrompt, ...prev]);
     if (category && !userCategories.includes(category)) {
@@ -201,6 +217,24 @@ const App: React.FC = () => {
     }
     setSavingPrompt(null);
   }, [userCategories]);
+  
+  const handleSaveNewVersion = (originalPrompt: Prompt, updatedData: Omit<Prompt, 'id' | 'versionGroupId' | 'createdAt' | 'isFavorite' | 'isShared'>) => {
+    const newVersion: Prompt = {
+        ...updatedData,
+        id: `user-${Date.now()}`,
+        versionGroupId: originalPrompt.versionGroupId,
+        createdAt: Date.now(),
+        isFavorite: originalPrompt.isFavorite, // Carry over favorite status
+        isShared: false, // New versions are not shared by default
+    };
+    setUserCollection(prev => [...prev, newVersion]);
+    if (updatedData.category && !userCategories.includes(updatedData.category)) {
+        setUserCategories(prev => [...prev, updatedData.category]);
+    }
+    setEditingPrompt(null);
+    setViewingPrompt(newVersion); // View the newly created version
+  };
+
 
   const handleSaveBuiltPrompt = useCallback((prompt: string) => {
     if (!prompt) return;
@@ -208,8 +242,18 @@ const App: React.FC = () => {
   }, []);
 
   const handleForkPrompt = useCallback((prompt: LibraryPrompt) => {
+    const newId = `user-${Date.now()}`;
     const newPrompt: Prompt = {
-      id: `user-${Date.now()}`, title: prompt.title, prompt: prompt.prompt, isFavorite: false, category: prompt.category, type: prompt.type, technique: prompt.technique, isShared: false,
+      id: newId,
+      versionGroupId: newId,
+      createdAt: Date.now(),
+      title: prompt.title, 
+      prompt: prompt.prompt, 
+      isFavorite: false, 
+      category: prompt.category, 
+      type: prompt.type, 
+      technique: prompt.technique, 
+      isShared: false,
     };
     setUserCollection(prev => [newPrompt, ...prev]);
   }, []);
@@ -217,23 +261,18 @@ const App: React.FC = () => {
   const handleStartEdit = (prompt: Prompt) => { setEditingPrompt(prompt); setViewingPrompt(null); };
   const handleCancelEdit = () => { setEditingPrompt(null); };
   
-  const handleUpdatePrompt = (updatedPrompt: Prompt) => {
-    setUserCollection(prev => prev.map(p => p.id === updatedPrompt.id ? updatedPrompt : p));
-    if (updatedPrompt.category && !userCategories.includes(updatedPrompt.category)) {
-        setUserCategories(prev => [...prev, updatedPrompt.category]);
-    }
-    setEditingPrompt(null);
-    setViewingPrompt(updatedPrompt);
-  };
-
-  const handleDeletePrompt = (promptId: string) => {
-    if (window.confirm("Are you sure you want to delete this prompt?")) {
-      setUserCollection(prev => prev.filter(p => p.id !== promptId));
-      setViewingProject(p => p ? {...p, promptIds: p.promptIds.filter(id => id !== promptId)} : null);
-      setViewingWorkflow(w => {
-        if (!w) return null;
-        return {...w, steps: w.steps.filter(step => step.promptId !== promptId)};
-      });
+  const handleDeletePrompt = (prompt: Prompt) => {
+    if (window.confirm("Are you sure you want to delete this prompt and all its versions?")) {
+      setUserCollection(prev => prev.filter(p => p.versionGroupId !== prompt.versionGroupId));
+      // Also remove from projects and workflows
+      setProjects(prevProjects => prevProjects.map(proj => ({
+        ...proj,
+        promptIds: proj.promptIds.filter(id => id !== prompt.id) // This should check against all version IDs
+      })));
+      setWorkflows(prevWorkflows => prevWorkflows.map(wf => ({
+        ...wf,
+        steps: wf.steps.filter(step => step.promptId !== prompt.id)
+      })));
       setViewingPrompt(null);
     }
   };
@@ -253,6 +292,43 @@ const App: React.FC = () => {
         setViewingPrompt(updatedPrompt);
     }
   }, [viewingPrompt]);
+  
+  // --- Bulk Action Handlers ---
+  const handleToggleSelection = useCallback((promptId: string) => {
+    setSelectedPromptIds(prev => {
+        const newSet = new Set(prev);
+        if (newSet.has(promptId)) newSet.delete(promptId);
+        else newSet.add(promptId);
+        return newSet;
+    });
+  }, []);
+
+  const handleClearSelection = useCallback(() => setSelectedPromptIds(new Set()), []);
+
+  const handleBulkDelete = () => {
+    if (window.confirm(`Are you sure you want to delete ${selectedPromptIds.size} prompts? This action cannot be undone.`)) {
+        setUserCollection(prev => prev.filter(p => !selectedPromptIds.has(p.id)));
+        handleClearSelection();
+    }
+  };
+
+  const handleBulkToggleFavorite = () => {
+    setUserCollection(prev => prev.map(p => selectedPromptIds.has(p.id) ? { ...p, isFavorite: !p.isFavorite } : p));
+    handleClearSelection();
+  };
+  
+  const handleBulkAddToProject = (project: Project) => {
+    setProjects(prev => prev.map(p => {
+        if (p.id === project.id) {
+            const newPromptIds = [...new Set([...p.promptIds, ...selectedPromptIds])];
+            return { ...p, promptIds: newPromptIds };
+        }
+        return p;
+    }));
+    setAddPromptsModalOpen(false);
+    handleClearSelection();
+  };
+
 
   const handleViewPrompt = (prompt: Prompt | LibraryPrompt) => setViewingPrompt(prompt);
   const handleUseHistoryPrompt = useCallback((prompt: string) => { setActiveView('builder'); setIsHistoryModalOpen(false); }, []);
@@ -346,7 +422,7 @@ const App: React.FC = () => {
         if (viewingWorkflow?.id === workflowId) setViewingWorkflow(updatedWorkflow);
         return updatedWorkflow;
       }
-      return w;
+      return w; // Bug Fix: was returning p before
     }));
   };
   
@@ -442,8 +518,18 @@ const App: React.FC = () => {
   }, [currentUser]);
 
   const handleForkCommunityPrompt = useCallback((promptToFork: CommunityPrompt) => {
+    const newId = `user-${Date.now()}`;
     const newPrompt: Prompt = {
-      id: `user-${Date.now()}`, title: promptToFork.title, prompt: promptToFork.prompt, isFavorite: false, category: promptToFork.category, type: promptToFork.type, technique: promptToFork.technique, isShared: false,
+      id: newId,
+      versionGroupId: newId,
+      createdAt: Date.now(),
+      title: promptToFork.title, 
+      prompt: promptToFork.prompt, 
+      isFavorite: false, 
+      category: promptToFork.category, 
+      type: promptToFork.type, 
+      technique: promptToFork.technique, 
+      isShared: false,
     };
     setUserCollection(prev => [newPrompt, ...prev]);
     setCommunityPrompts(prev => prev.map(p => p.id === promptToFork.id ? { ...p, forks: p.forks + 1 } : p));
@@ -478,7 +564,19 @@ const App: React.FC = () => {
                   onSavePrompt={handleSaveBuiltPrompt}
                 />;
       case 'collection':
-        return <CollectionView userCollection={userCollection} onViewPrompt={handleViewPrompt} onToggleFavorite={handleToggleFavorite} onForkPrompt={handleForkPrompt} collectionFilter={collectionFilter} />;
+        return <CollectionView 
+                    userCollection={userCollection} 
+                    onViewPrompt={handleViewPrompt} 
+                    onToggleFavorite={handleToggleFavorite} 
+                    onForkPrompt={handleForkPrompt} 
+                    collectionFilter={collectionFilter}
+                    selectedIds={selectedPromptIds}
+                    onToggleSelect={handleToggleSelection}
+                    onClearSelection={handleClearSelection}
+                    onBulkDelete={handleBulkDelete}
+                    onBulkToggleFavorite={handleBulkToggleFavorite}
+                    onBulkAddToProject={() => setAddPromptsModalOpen(true)}
+                />;
       case 'community':
         return <CommunityView communityPrompts={communityPrompts} currentUser={currentUser} onLike={handleLikePrompt} onFork={handleForkCommunityPrompt} />;
       case 'optimizer':
@@ -493,6 +591,8 @@ const App: React.FC = () => {
         return <WorkspaceView teams={teams} allUsers={allUsers} userCollection={userCollection} currentUser={currentUser} />;
       case 'analytics':
         return <AnalyticsDashboardView communityPrompts={communityPrompts} currentUser={currentUser} />;
+      case 'matrix':
+        return <MatrixView />;
       case 'projects':
         if (viewingProject) {
           const projectPrompts = userCollection.filter(p => viewingProject.promptIds.includes(p.id));
@@ -504,7 +604,7 @@ const App: React.FC = () => {
               <div className="p-4 bg-gray-100 dark:bg-gray-800/40 rounded-lg">
                 <div className="flex justify-between items-start"><div><h2 className="text-2xl font-bold gradient-text">{viewingProject.title}</h2><p className="text-gray-600 dark:text-gray-400 mt-1">{viewingProject.description}</p></div><div className="flex gap-2"><button onClick={() => setIsProjectModalOpen(viewingProject)} className="text-xs px-3 py-1 bg-gray-200 text-gray-800 dark:bg-gray-700 dark:text-gray-200 rounded-md hover:bg-gray-300 dark:hover:bg-gray-600">Edit</button><button onClick={() => handleDeleteProject(viewingProject.id)} className="text-xs px-3 py-1 bg-red-100 text-red-700 dark:bg-red-800/50 dark:text-red-300 rounded-md hover:bg-red-200 dark:hover:bg-red-700/50">Delete</button></div></div>
               </div>
-              <button onClick={() => setAddPromptsModalOpen(true)} className="w-full py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors">+ Add Prompts to Project</button>
+              <button onClick={() => setAddPromptsModalOpen(viewingProject)} className="w-full py-2.5 bg-indigo-600 text-white font-bold rounded-lg hover:bg-indigo-500 transition-colors">+ Add Prompts to Project</button>
               {projectPrompts.length > 0 ? (<div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">{projectPrompts.map(prompt => (<PromptCard key={prompt.id} prompt={prompt} onView={() => handleViewPrompt(prompt)} onToggleFavorite={() => handleToggleFavorite(prompt.id)} onRemoveFromProject={() => handleRemovePromptFromProject(viewingProject.id, prompt.id)} />))}</div>) : (<div className="text-center py-12 text-gray-500 dark:text-gray-500"><p>This project is empty.</p><p className="text-sm">Click "Add Prompts to Project" to get started.</p></div>)}
             </div>
           );
@@ -590,11 +690,11 @@ const App: React.FC = () => {
       </div>
       
       {savingPrompt && <SavePromptModal promptText={savingPrompt.prompt} initialTitle={savingPrompt.title} categories={userCategories} onSave={(title, category, type, technique, imageUrl) => handleSaveNewPrompt(title, category, type, technique, savingPrompt.prompt, imageUrl)} onCancel={() => setSavingPrompt(null)} />}
-      {editingPrompt && <EditPromptModal prompt={editingPrompt} categories={userCategories} onSave={handleUpdatePrompt} onCancel={handleCancelEdit} />}
-      {viewingPrompt && <PromptDetailModal prompt={viewingPrompt} onClose={() => setViewingPrompt(null)} onEdit={('isFavorite' in viewingPrompt) ? handleStartEdit : undefined} onDelete={('isFavorite' in viewingPrompt) ? handleDeletePrompt : undefined} onUse={() => {}} onToggleFavorite={('isFavorite' in viewingPrompt) ? handleToggleFavorite : undefined} onSave={(promptToSave) => setSavingPrompt({prompt: promptToSave.prompt, title: promptToSave.title})} currentUser={currentUser} onShare={('isFavorite' in viewingPrompt) ? handleSharePrompt : undefined} />}
+      {editingPrompt && <EditPromptModal prompt={editingPrompt} categories={userCategories} onSave={handleSaveNewVersion} onCancel={handleCancelEdit} />}
+      {viewingPrompt && <PromptDetailModal prompt={viewingPrompt} userCollection={userCollection} onClose={() => setViewingPrompt(null)} onEdit={('isFavorite' in viewingPrompt) ? handleStartEdit : undefined} onDelete={('isFavorite' in viewingPrompt) ? handleDeletePrompt : undefined} onUse={() => {}} onToggleFavorite={('isFavorite' in viewingPrompt) ? handleToggleFavorite : undefined} onSave={(promptToSave) => setSavingPrompt({prompt: promptToSave.prompt, title: promptToSave.title})} currentUser={currentUser} onShare={('isFavorite' in viewingPrompt) ? handleSharePrompt : undefined} />}
       {isHistoryModalOpen && <HistoryModal isOpen={isHistoryModalOpen} onClose={() => setIsHistoryModalOpen(false)} history={promptHistory} onUse={handleUseHistoryPrompt} onDelete={handleDeleteHistoryItem} onClearAll={handleClearHistory} />}
       {isProjectModalOpen && <CreateEditProjectModal isOpen={!!isProjectModalOpen} project={'id' in isProjectModalOpen ? isProjectModalOpen as Project : undefined} onSave={handleSaveProject} onCancel={() => setIsProjectModalOpen(null)} />}
-      {isAddPromptsModalOpen && viewingProject && <AddPromptsToProjectModal isOpen={isAddPromptsModalOpen} onClose={() => setAddPromptsModalOpen(false)} userCollection={userCollection} projectPromptIds={viewingProject.promptIds} onAddPrompts={handleAddPromptsToProject} />}
+      {isAddPromptsModalOpen && <AddPromptsToProjectModal isOpen={!!isAddPromptsModalOpen} onClose={() => setAddPromptsModalOpen(false)} userCollection={userCollection} projectPromptIds={viewingProject ? viewingProject.promptIds : []} projects={projects} onAddPrompts={typeof isAddPromptsModalOpen === 'boolean' ? handleBulkAddToProject : (project) => handleAddPromptsToProject(project.promptIds)} targetProject={typeof isAddPromptsModalOpen !== 'boolean' ? isAddPromptsModalOpen : undefined} />}
       {isWorkflowModalOpen && <CreateEditWorkflowModal isOpen={!!isWorkflowModalOpen} workflow={'id' in isWorkflowModalOpen ? isWorkflowModalOpen as Workflow : undefined} onSave={handleSaveWorkflow} onCancel={() => setIsWorkflowModalOpen(null)} />}
       {runningWorkflow && <RunWorkflowModal workflow={runningWorkflow} userCollection={userCollection} onClose={() => setRunningWorkflow(null)} />}
       {isSaveContextModalOpen && <SaveContextModal onSave={handleSaveNewContext} onCancel={() => setIsSaveContextModalOpen(false)} />}

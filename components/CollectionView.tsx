@@ -4,6 +4,7 @@ import { LIBRARY_PROMPTS, LIBRARY_CATEGORIES, PROMPT_TECHNIQUES } from '../promp
 import { PromptCard } from './PromptCard';
 import { FilterDropdown } from './FilterDropdown';
 import { MultiSelectDropdown } from './MultiSelectDropdown';
+import { BulkActionBar } from './BulkActionBar';
 
 interface CollectionViewProps {
   userCollection: Prompt[];
@@ -11,6 +12,12 @@ interface CollectionViewProps {
   onToggleFavorite: (promptId: string) => void;
   onForkPrompt: (prompt: LibraryPrompt) => void;
   collectionFilter: 'all' | 'favorites';
+  selectedIds: Set<string>;
+  onToggleSelect: (promptId: string) => void;
+  onClearSelection: () => void;
+  onBulkDelete: () => void;
+  onBulkToggleFavorite: () => void;
+  onBulkAddToProject: () => void;
 }
 
 const SearchIcon: React.FC = () => (
@@ -48,7 +55,19 @@ const TypeFilterButton: React.FC<{
 
 type SortOption = 'trending' | 'newest' | 'az';
 
-export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, onViewPrompt, onToggleFavorite, onForkPrompt, collectionFilter }) => {
+export const CollectionView: React.FC<CollectionViewProps> = ({ 
+    userCollection, 
+    onViewPrompt, 
+    onToggleFavorite, 
+    onForkPrompt, 
+    collectionFilter,
+    selectedIds,
+    onToggleSelect,
+    onClearSelection,
+    onBulkDelete,
+    onBulkToggleFavorite,
+    onBulkAddToProject
+}) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [llmFilter, setLlmFilter] = useState<LLMModel[]>([]);
   const [techniqueFilter, setTechniqueFilter] = useState<PromptTechnique[]>([]);
@@ -56,6 +75,34 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
   const [libraryTypeFilter, setLibraryTypeFilter] = useState<string>('All');
   const [userCollectionTypeFilter, setUserCollectionTypeFilter] = useState<'all' | PromptType>('all');
   const [sortOption, setSortOption] = useState<SortOption>('trending');
+  const [selectMode, setSelectMode] = useState(false);
+  
+  // Logic for Prompt Versioning (display only latest version)
+  const latestUserPrompts = useMemo(() => {
+    const grouped = userCollection.reduce((acc, p) => {
+        const existing = acc.get(p.versionGroupId);
+        if (!existing || p.createdAt > existing.createdAt) {
+            acc.set(p.versionGroupId, p);
+        }
+        return acc;
+    }, new Map<string, Prompt>());
+    return Array.from(grouped.values());
+  }, [userCollection]);
+
+  // Get version counts for display
+  const versionCounts = useMemo(() => {
+    return userCollection.reduce((acc, p) => {
+        acc[p.versionGroupId] = (acc[p.versionGroupId] || 0) + 1;
+        return acc;
+    }, {} as Record<string, number>);
+  }, [userCollection]);
+
+
+  useEffect(() => {
+    if (!selectMode) {
+        onClearSelection();
+    }
+  }, [selectMode, onClearSelection]);
 
   const availableLlmModels = useMemo(() => {
     switch (libraryTypeFilter) {
@@ -72,7 +119,6 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
   }, [libraryTypeFilter]);
 
   useEffect(() => {
-    // If an LLM filter is active but no longer in the available models, clear the filter
     if (llmFilter.length > 0 && !llmFilter.every(m => availableLlmModels.includes(m))) {
         setLlmFilter([]);
     }
@@ -108,7 +154,9 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
   }, [searchQuery, llmFilter, techniqueFilter, categoryFilter, libraryTypeFilter, sortOption, collectionFilter]);
 
   const filteredUserCollection = useMemo(() => {
-    let prompts = userCollection.filter(p => {
+    let prompts = (collectionFilter === 'all' ? latestUserPrompts : userCollection.filter(p => p.isFavorite));
+    
+    prompts = prompts.filter(p => {
         if (collectionFilter === 'favorites' && !p.isFavorite) return false;
         if (userCollectionTypeFilter !== 'all' && p.type !== userCollectionTypeFilter) return false;
         if (techniqueFilter.length > 0 && p.technique && !techniqueFilter.includes(p.technique)) return false;
@@ -116,10 +164,9 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
         return true;
     });
 
-    // Simple A-Z sort for user collection
-    return prompts.sort((a,b) => a.title.localeCompare(b.title));
+    return prompts.sort((a,b) => b.createdAt - a.createdAt);
 
-  }, [userCollection, searchQuery, collectionFilter, userCollectionTypeFilter, techniqueFilter]);
+  }, [latestUserPrompts, userCollection, searchQuery, collectionFilter, userCollectionTypeFilter, techniqueFilter]);
 
   const resetFilters = () => {
       setSearchQuery('');
@@ -130,7 +177,7 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
   };
 
   const noPromptsFound = filteredLibraryPrompts.length === 0 && filteredUserCollection.length === 0;
-  const showFilters = collectionFilter === 'all';
+  const showLibraryFilters = collectionFilter === 'all';
   const hasActiveFilters = searchQuery || llmFilter.length > 0 || techniqueFilter.length > 0 || categoryFilter.length > 0 || libraryTypeFilter !== 'All';
 
   const SortButton: React.FC<{ label: string; value: SortOption; icon: string; }> = ({ label, value, icon }) => (
@@ -144,7 +191,7 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
 
   return (
     <div className="space-y-8">
-      {showFilters && (
+      {showLibraryFilters && (
         <div className="space-y-4">
           <div className="relative">
               <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -181,7 +228,7 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
             </div>
         )}
         
-        {showFilters && filteredLibraryPrompts.length > 0 && (
+        {showLibraryFilters && filteredLibraryPrompts.length > 0 && (
           <section>
              <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
                 <h2 className="text-2xl font-bold gradient-text pb-2 border-b-2 border-purple-600/20 dark:border-purple-500/20">Prompt Library</h2>
@@ -202,28 +249,52 @@ export const CollectionView: React.FC<CollectionViewProps> = ({ userCollection, 
         {filteredUserCollection.length > 0 && (
           <section className="space-y-4">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <h2 className="text-2xl font-bold gradient-text pb-2">
-                    {collectionFilter === 'favorites' ? 'My Favorites' : 'My Collection'}
-                </h2>
-                <div className="flex items-center gap-1 p-1 bg-gray-200/60 dark:bg-gray-900/50 rounded-xl border border-gray-300 dark:border-gray-700/80">
-                    {(['all', 'image', 'text', 'video'] as const).map(type => (
-                        <TypeFilterButton 
-                            key={type}
-                            label={type.charAt(0).toUpperCase() + type.slice(1)}
-                            isActive={userCollectionTypeFilter === type}
-                            onClick={() => setUserCollectionTypeFilter(type)}
-                        />
-                    ))}
+                <div className="flex-1">
+                    <h2 className="text-2xl font-bold gradient-text pb-2">
+                        {collectionFilter === 'favorites' ? 'My Favorites' : 'My Collection'}
+                    </h2>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setSelectMode(prev => !prev)} className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${selectMode ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>
+                        {selectMode ? 'Cancel' : 'Select'}
+                    </button>
+                    <div className="flex items-center gap-1 p-1 bg-gray-200/60 dark:bg-gray-900/50 rounded-xl border border-gray-300 dark:border-gray-700/80">
+                        {(['all', 'image', 'text', 'video'] as const).map(type => (
+                            <TypeFilterButton 
+                                key={type}
+                                label={type.charAt(0).toUpperCase() + type.slice(1)}
+                                isActive={userCollectionTypeFilter === type}
+                                onClick={() => setUserCollectionTypeFilter(type)}
+                            />
+                        ))}
+                    </div>
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredUserCollection.map(prompt => (
-                <PromptCard key={prompt.id} prompt={prompt} onView={() => onViewPrompt(prompt)} onToggleFavorite={() => onToggleFavorite(prompt.id)} searchQuery={searchQuery} />
+                <PromptCard 
+                    key={prompt.id} 
+                    prompt={prompt} 
+                    onView={() => onViewPrompt(prompt)} 
+                    onToggleFavorite={() => onToggleFavorite(prompt.id)} 
+                    searchQuery={searchQuery} 
+                    versionCount={versionCounts[prompt.versionGroupId]}
+                    selectMode={selectMode}
+                    isSelected={selectedIds.has(prompt.id)}
+                    onSelect={() => onToggleSelect(prompt.id)}
+                />
               ))}
             </div>
           </section>
         )}
       </div>
+      <BulkActionBar 
+        selectedCount={selectedIds.size}
+        onClear={onClearSelection}
+        onDelete={onBulkDelete}
+        onToggleFavorite={onBulkToggleFavorite}
+        onAddToProject={onBulkAddToProject}
+      />
     </div>
   );
 };
