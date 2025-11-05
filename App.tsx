@@ -5,7 +5,7 @@ import { Header } from './components/Header';
 import { generateImage } from './services/geminiService';
 import { Tabs } from './components/Tabs';
 import { CollectionView } from './components/CollectionView';
-import { Prompt, PromptType, UserContext, LibraryPrompt, HistoryItem, Project, Workflow, User, CommunityPrompt, PromptTechnique } from './prompts/collection';
+import { Prompt, PromptType, UserContext, LibraryPrompt, HistoryItem, Project, Workflow, User, CommunityPrompt, PromptTechnique, Team, WorkflowStep } from './prompts/collection';
 import { EditPromptModal } from './components/EditPromptModal';
 import { SavePromptModal } from './components/SavePromptModal';
 import { PromptDetailModal } from './components/PromptDetailModal';
@@ -21,14 +21,32 @@ import { RunWorkflowModal } from './components/RunWorkflowModal';
 import { CommunityView } from './components/CommunityView';
 import { OptimizerView } from './components/OptimizerView';
 import { SaveContextModal } from './components/SaveContextModal';
+import { WorkspaceView } from './components/WorkspaceView';
+import { AnalyticsDashboardView } from './components/AnalyticsDashboardView';
 
-type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer';
+type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics';
 type CollectionFilter = 'all' | 'favorites';
 type Theme = 'light' | 'dark';
 
 // --- Point constants for gamification ---
 const POINTS_FOR_LIKE = 1;
 const POINTS_FOR_FORK = 5;
+
+// --- Mock Data for New Features ---
+const MOCK_TEAMS: Team[] = [
+    {
+        id: 'team-1',
+        name: 'Marketing Wizards',
+        ownerId: 'user-123',
+        members: [
+            { userId: 'user-123', name: 'Alex', role: 'Admin' },
+            { userId: 'user-456', name: 'Jordan', role: 'Editor' },
+        ],
+        sharedPromptIds: ['user-1672531200001'],
+        sharedProjectIds: [],
+        sharedWorkflowIds: [],
+    }
+];
 
 const App: React.FC = () => {
   // --- Image Generation State ---
@@ -50,6 +68,7 @@ const App: React.FC = () => {
   const [currentUser, setCurrentUser] = useState<User | null>(null);
   const [allUsers, setAllUsers] = useState<User[]>([]); 
   const [communityPrompts, setCommunityPrompts] = useState<CommunityPrompt[]>([]);
+  const [teams, setTeams] = useState<Team[]>(MOCK_TEAMS);
 
   // Modals and detail views state
   const [editingPrompt, setEditingPrompt] = useState<Prompt | null>(null);
@@ -92,8 +111,8 @@ const App: React.FC = () => {
 
 
   useEffect(() => {
-    const mockCurrentUser: User = { id: 'user-123', name: 'Alex', subscriptionTier: 'premium', points: 150, likedPromptIds: ['comm-2'] };
-    const mockOtherUser: User = { id: 'user-456', name: 'Jordan', subscriptionTier: 'free', points: 25, likedPromptIds: [] };
+    const mockCurrentUser: User = { id: 'user-123', name: 'Alex', subscriptionTier: 'premium', points: 150, likedPromptIds: ['comm-2'], teamIds: ['team-1'] };
+    const mockOtherUser: User = { id: 'user-456', name: 'Jordan', subscriptionTier: 'free', points: 25, likedPromptIds: [], teamIds: ['team-1'] };
     const savedUsers = localStorage.getItem('allUsers');
     setAllUsers(savedUsers ? JSON.parse(savedUsers) : [mockCurrentUser, mockOtherUser]);
     setCurrentUser(mockCurrentUser);
@@ -162,7 +181,6 @@ const App: React.FC = () => {
     } catch (e) {
       console.error(e);
       const errorMessage = e instanceof Error ? e.message.toLowerCase() : '';
-      // Check for keywords related to safety or blocking
       if (errorMessage.includes('block') || errorMessage.includes('safety')) {
         setImageError('Image generation failed. Your prompt was likely blocked for safety reasons. Please try different wording.');
       } else {
@@ -212,7 +230,10 @@ const App: React.FC = () => {
     if (window.confirm("Are you sure you want to delete this prompt?")) {
       setUserCollection(prev => prev.filter(p => p.id !== promptId));
       setViewingProject(p => p ? {...p, promptIds: p.promptIds.filter(id => id !== promptId)} : null);
-      setViewingWorkflow(w => w ? {...w, promptIds: w.promptIds.filter(id => id !== promptId)} : null);
+      setViewingWorkflow(w => {
+        if (!w) return null;
+        return {...w, steps: w.steps.filter(step => step.promptId !== promptId)};
+      });
       setViewingPrompt(null);
     }
   };
@@ -241,6 +262,7 @@ const App: React.FC = () => {
   const handleShowCollection = () => { setActiveView('collection'); setCollectionFilter('all'); };
   const handleShowFavorites = () => { setActiveView('collection'); setCollectionFilter('favorites'); };
   const handleShowHistory = () => setIsHistoryModalOpen(true);
+  const handleShowAnalytics = () => setActiveView('analytics');
   
   const handleSaveProject = (title: string, description: string) => {
     if (isProjectModalOpen && 'id' in isProjectModalOpen) {
@@ -291,7 +313,7 @@ const App: React.FC = () => {
       setWorkflows(prev => prev.map(w => w.id === (isWorkflowModalOpen as Workflow).id ? {...w, title, description} : w));
       setViewingWorkflow(prev => prev && prev.id === (isWorkflowModalOpen as Workflow).id ? {...prev, title, description} : prev);
     } else {
-      const newWorkflow: Workflow = { id: `wf-${Date.now()}`, title, description, promptIds: [] };
+      const newWorkflow: Workflow = { id: `wf-${Date.now()}`, title, description, steps: [] };
       setWorkflows(prev => [newWorkflow, ...prev]);
     }
     setIsWorkflowModalOpen(null);
@@ -307,7 +329,8 @@ const App: React.FC = () => {
   const handleAddPromptToWorkflow = (workflowId: string, promptId: string) => {
     setWorkflows(prev => prev.map(w => {
         if (w.id === workflowId) {
-            const updatedWorkflow = { ...w, promptIds: [...w.promptIds, promptId] };
+            const newStep: WorkflowStep = { promptId };
+            const updatedWorkflow = { ...w, steps: [...w.steps, newStep] };
             if(viewingWorkflow?.id === workflowId) setViewingWorkflow(updatedWorkflow);
             return updatedWorkflow;
         }
@@ -315,34 +338,44 @@ const App: React.FC = () => {
     }));
   };
 
-  const handleRemovePromptFromWorkflow = (workflowId: string, promptId: string) => {
+  const handleRemovePromptFromWorkflow = (workflowId: string, promptId: string, indexToRemove: number) => {
     setWorkflows(prev => prev.map(w => {
       if (w.id === workflowId) {
-        const newPromptIds = w.promptIds.filter((id, index) => {
-            const firstIndex = w.promptIds.indexOf(promptId);
-            return index !== firstIndex;
-        });
-        const updatedWorkflow = { ...w, promptIds: newPromptIds };
+        const newSteps = w.steps.filter((step, index) => index !== indexToRemove);
+        const updatedWorkflow = { ...w, steps: newSteps };
         if (viewingWorkflow?.id === workflowId) setViewingWorkflow(updatedWorkflow);
         return updatedWorkflow;
       }
-      // FIX: The error is here. 'p' is not defined. It should be 'w'.
+      return w;
+    }));
+  };
+  
+  const handleUpdateWorkflowStepCondition = (workflowId: string, stepIndex: number, condition: string) => {
+    setWorkflows(prev => prev.map(w => {
+      if (w.id === workflowId) {
+        const newSteps = [...w.steps];
+        if (newSteps[stepIndex]) {
+          newSteps[stepIndex] = { ...newSteps[stepIndex], condition };
+          const updatedWorkflow = { ...w, steps: newSteps };
+          if (viewingWorkflow?.id === workflowId) setViewingWorkflow(updatedWorkflow);
+          return updatedWorkflow;
+        }
+      }
       return w;
     }));
   };
 
-  const handleMovePromptInWorkflow = (workflowId: string, promptId: string, direction: 'up' | 'down') => {
+
+  const handleMovePromptInWorkflow = (workflowId: string, index: number, direction: 'up' | 'down') => {
     setWorkflows(prev => prev.map(w => {
         if (w.id === workflowId) {
-            const index = w.promptIds.indexOf(promptId);
-            if (index === -1) return w;
-            const newPromptIds = [...w.promptIds];
+            const newSteps = [...w.steps];
             if (direction === 'up' && index > 0) {
-                [newPromptIds[index], newPromptIds[index - 1]] = [newPromptIds[index - 1], newPromptIds[index]];
-            } else if (direction === 'down' && index < newPromptIds.length - 1) {
-                [newPromptIds[index], newPromptIds[index + 1]] = [newPromptIds[index + 1], newPromptIds[index]];
+                [newSteps[index], newSteps[index - 1]] = [newSteps[index - 1], newSteps[index]];
+            } else if (direction === 'down' && index < newSteps.length - 1) {
+                [newSteps[index], newSteps[index + 1]] = [newSteps[index + 1], newSteps[index]];
             }
-            const updatedWorkflow = { ...w, promptIds: newPromptIds };
+            const updatedWorkflow = { ...w, steps: newSteps };
             if (viewingWorkflow?.id === workflowId) setViewingWorkflow(updatedWorkflow);
             return updatedWorkflow;
         }
@@ -366,6 +399,7 @@ const App: React.FC = () => {
         createdAt: Date.now(),
         likes: 0,
         forks: 0,
+        views: 0,
     };
 
     setCommunityPrompts(prev => [newCommunityPrompt, ...prev]);
@@ -455,6 +489,10 @@ const App: React.FC = () => {
                   onSavePrompt={handleSaveBuiltPrompt}
                   addToHistory={addToHistory}
                />;
+      case 'workspace':
+        return <WorkspaceView teams={teams} allUsers={allUsers} userCollection={userCollection} currentUser={currentUser} />;
+      case 'analytics':
+        return <AnalyticsDashboardView communityPrompts={communityPrompts} currentUser={currentUser} />;
       case 'projects':
         if (viewingProject) {
           const projectPrompts = userCollection.filter(p => viewingProject.promptIds.includes(p.id));
@@ -474,8 +512,8 @@ const App: React.FC = () => {
         return <ProjectsView projects={projects} onViewProject={setViewingProject} onEditProject={(p) => setIsProjectModalOpen(p)} onDeleteProject={handleDeleteProject} onCreateProject={() => setIsProjectModalOpen({})} />;
       case 'workflows':
         if (viewingWorkflow) {
-          const workflowPrompts = viewingWorkflow.promptIds.map(id => userCollection.find(p => p.id === id)).filter((p): p is Prompt => !!p);
-          const availablePrompts = userCollection.filter(p => !viewingWorkflow.promptIds.includes(p.id));
+          const workflowPrompts = viewingWorkflow.steps.map(step => userCollection.find(p => p.id === step.promptId)).filter((p): p is Prompt => !!p);
+          const availablePrompts = userCollection.filter(p => !viewingWorkflow.steps.map(s => s.promptId).includes(p.id));
           return (
             <div className="space-y-6">
                  <div className="flex justify-between items-center">
@@ -492,22 +530,39 @@ const App: React.FC = () => {
                         {availablePrompts.map(p => <option key={p.id} value={p.id}>{p.title}</option>)}
                     </select>
                 </div>
-                {workflowPrompts.length > 0 ? (
+                {viewingWorkflow.steps.length > 0 ? (
                     <div className="space-y-4">
-                        {workflowPrompts.map((prompt, index) => (
-                            <div key={`${prompt.id}-${index}`} className="flex items-center gap-4 p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg">
-                                <span className="text-indigo-500 font-bold">{index + 1}</span>
-                                <div className="flex-1">
-                                    <h4 className="font-semibold text-gray-800 dark:text-gray-200">{prompt.title}</h4>
-                                    <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{prompt.prompt}</p>
+                        {viewingWorkflow.steps.map((step, index) => {
+                            const prompt = userCollection.find(p => p.id === step.promptId);
+                            if (!prompt) return null;
+                            return (
+                            <div key={`${prompt.id}-${index}`} className="flex flex-col gap-2 p-3 bg-gray-50 dark:bg-gray-800/40 rounded-lg">
+                                <div className="flex items-center gap-4">
+                                    <span className="text-indigo-500 font-bold">{index + 1}</span>
+                                    <div className="flex-1">
+                                        <h4 className="font-semibold text-gray-800 dark:text-gray-200">{prompt.title}</h4>
+                                        <p className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">{prompt.prompt}</p>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <button disabled={index === 0} onClick={() => handleMovePromptInWorkflow(viewingWorkflow!.id, index, 'up')} className="p-1.5 rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700">&uarr;</button>
+                                        <button disabled={index === viewingWorkflow!.steps.length - 1} onClick={() => handleMovePromptInWorkflow(viewingWorkflow!.id, index, 'down')} className="p-1.5 rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700">&darr;</button>
+                                        <button onClick={() => handleRemovePromptFromWorkflow(viewingWorkflow!.id, prompt.id, index)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20">X</button>
+                                    </div>
                                 </div>
-                                <div className="flex items-center gap-2">
-                                    <button disabled={index === 0} onClick={() => handleMovePromptInWorkflow(viewingWorkflow.id, prompt.id, 'up')} className="p-1.5 rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700">&uarr;</button>
-                                    <button disabled={index === workflowPrompts.length - 1} onClick={() => handleMovePromptInWorkflow(viewingWorkflow.id, prompt.id, 'down')} className="p-1.5 rounded-full disabled:opacity-30 disabled:cursor-not-allowed hover:bg-gray-200 dark:hover:bg-gray-700">&darr;</button>
-                                    <button onClick={() => handleRemovePromptFromWorkflow(viewingWorkflow.id, prompt.id)} className="p-1.5 rounded-full text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20">X</button>
-                                </div>
+                                {index > 0 && (
+                                    <div className="pl-8">
+                                        <label className="text-xs font-semibold text-gray-500 dark:text-gray-400">Condition (Optional)</label>
+                                        <input
+                                            type="text"
+                                            value={step.condition || ''}
+                                            onChange={(e) => handleUpdateWorkflowStepCondition(viewingWorkflow!.id, index, e.target.value)}
+                                            placeholder={`Run if output from Step ${index} contains...`}
+                                            className="mt-1 w-full bg-white dark:bg-gray-900/50 border-2 border-gray-300 dark:border-gray-700 rounded-lg px-2 py-1 text-xs focus:outline-none focus:ring-1 focus:ring-indigo-500"
+                                        />
+                                    </div>
+                                )}
                             </div>
-                        ))}
+                        )})}
                     </div>
                 ) : (
                     <div className="text-center py-12 text-gray-500 dark:text-gray-500"><p>This workflow is empty.</p><p className="text-sm">Add prompts from your collection to build your workflow.</p></div>
@@ -523,7 +578,7 @@ const App: React.FC = () => {
     <>
       <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 font-sans text-gray-800 dark:text-gray-300">
         <div className="w-full max-w-6xl mx-auto space-y-8">
-          <Header theme={theme} toggleTheme={toggleTheme} onShowHistory={handleShowHistory} onShowCollection={handleShowCollection} onShowFavorites={handleShowFavorites} currentUser={currentUser} />
+          <Header theme={theme} toggleTheme={toggleTheme} onShowHistory={handleShowHistory} onShowCollection={handleShowCollection} onShowFavorites={handleShowFavorites} currentUser={currentUser} onShowAnalytics={handleShowAnalytics} />
           <Tabs activeView={activeView} setActiveView={(v) => { setActiveView(v); setViewingProject(null); setViewingWorkflow(null); }} />
           <main className="bg-white/70 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl shadow-indigo-500/10 p-6 md:p-8">
             {renderActiveView()}

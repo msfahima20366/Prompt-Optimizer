@@ -52,10 +52,11 @@ interface HeaderProps {
     onShowHistory: () => void;
     onShowCollection: () => void;
     onShowFavorites: () => void;
+    onShowAnalytics: () => void;
     currentUser: User | null;
 }
 
-export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onShowHistory, onShowCollection, onShowFavorites, currentUser }) => {
+export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onShowHistory, onShowCollection, onShowFavorites, onShowAnalytics, currentUser }) => {
   const [isProfileOpen, setIsProfileOpen] = useState(false);
   const profileRef = useRef<HTMLDivElement>(null);
 
@@ -120,6 +121,7 @@ export const Header: React.FC<HeaderProps> = ({ theme, toggleTheme, onShowHistor
                     onShowCollection={() => { onShowCollection(); setIsProfileOpen(false); }}
                     onShowFavorites={() => { onShowFavorites(); setIsProfileOpen(false); }}
                     onShowHistory={() => { onShowHistory(); setIsProfileOpen(false); }}
+                    onShowAnalytics={() => { onShowAnalytics(); setIsProfileOpen(false); }}
                     onClose={() => setIsProfileOpen(false)}
                 />
             )}

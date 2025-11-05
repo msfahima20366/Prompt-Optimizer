@@ -19,12 +19,25 @@ export const RunWorkflowModal: React.FC<RunWorkflowModalProps> = ({ workflow, us
     const [error, setError] = useState<string | null>(null);
 
     const prompts = useMemo(() => {
-        return workflow.promptIds.map(id => userCollection.find(p => p.id === id)).filter((p): p is Prompt => !!p);
+        return workflow.steps.map(step => userCollection.find(p => p.id === step.promptId)).filter((p): p is Prompt => !!p);
     }, [workflow, userCollection]);
 
     const handleRunStep = async () => {
         setIsLoading(true);
         setError(null);
+        
+        // Check condition before running
+        const step = workflow.steps[currentStep];
+        if (step.condition && currentStep > 0) {
+            const prevOutput = outputs[currentStep - 1];
+            const conditionValue = step.condition.toLowerCase();
+            
+            if (!prevOutput || !prevOutput.toLowerCase().includes(conditionValue)) {
+                setError(`Condition not met. Halted at Step ${currentStep + 1}. (Required: output from Step ${currentStep} to contain "${step.condition}")`);
+                setIsLoading(false);
+                return;
+            }
+        }
         
         let promptText = prompts[currentStep].prompt;
         outputs.forEach((output, index) => {
@@ -35,7 +48,6 @@ export const RunWorkflowModal: React.FC<RunWorkflowModalProps> = ({ workflow, us
         });
         
         try {
-            // FIX: generatePrompt expects 3 arguments (prompt, temperature, topP). Using default values.
             const result = await generatePrompt(promptText, 0.8, 0.95);
             setOutputs(prev => {
                 const newOutputs = [...prev];
@@ -69,9 +81,13 @@ export const RunWorkflowModal: React.FC<RunWorkflowModalProps> = ({ workflow, us
                 </header>
 
                 <div className="flex-1 p-6 space-y-4 overflow-y-auto">
-                    {prompts.map((prompt, index) => (
+                    {workflow.steps.map((step, index) => {
+                         const prompt = userCollection.find(p => p.id === step.promptId);
+                         if (!prompt) return null;
+                         return (
                          <div key={`${prompt.id}-${index}`} className={`p-4 rounded-lg border-2 ${currentStep === index ? 'border-indigo-500 bg-indigo-50 dark:bg-indigo-900/20' : 'bg-gray-50 dark:bg-gray-800/40 border-transparent'}`}>
                             <h3 className="font-bold text-gray-800 dark:text-gray-200">Step {index + 1}: {prompt.title}</h3>
+                            {step.condition && index > 0 && <p className="text-xs font-semibold text-purple-600 dark:text-purple-400 mt-1">Condition: Run if output from Step {index} contains "{step.condition}"</p>}
                             <p className="text-xs font-mono text-gray-500 dark:text-gray-400 mt-2 whitespace-pre-wrap">{prompt.prompt}</p>
                             {outputs.length > index && outputs[index] !== null && (
                                 <div className="mt-3 pt-3 border-t border-gray-200 dark:border-gray-700">
@@ -80,7 +96,7 @@ export const RunWorkflowModal: React.FC<RunWorkflowModalProps> = ({ workflow, us
                                 </div>
                             )}
                          </div>
-                    ))}
+                    )})}
                 </div>
                 
                 <footer className="flex-shrink-0 p-4 border-t border-gray-200 dark:border-gray-700/50 space-y-2">

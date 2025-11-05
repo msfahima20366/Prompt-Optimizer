@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 
-type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer';
+type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics';
 
 interface TabsProps {
   activeView: View;
@@ -27,12 +27,13 @@ export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
     const mainViews: { key: View, label: string }[] = [
         { key: 'collection', label: 'Collection' },
         { key: 'optimizer', label: 'Optimizer' },
-        { key: 'community', label: 'Community' },
-        { key: 'projects', label: 'Projects' },
-        { key: 'workflows', label: 'Workflows' },
+        { key: 'workspace', label: 'Workspace' },
     ];
 
     const dropdownViews: { key: View, label: string, isComingSoon?: boolean }[] = [
+        { key: 'community', label: 'Community' },
+        { key: 'projects', label: 'Projects' },
+        { key: 'workflows', label: 'Workflows' },
         { key: 'builder', label: 'Builder', isComingSoon: true },
     ];
     

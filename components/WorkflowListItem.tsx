@@ -45,7 +45,7 @@ export const WorkflowListItem: React.FC<WorkflowListItemProps> = ({ workflow, on
       
       <div className="mt-4 pt-2 border-t border-gray-200 dark:border-gray-700/50">
         <span className="text-sm font-semibold text-indigo-500 dark:text-indigo-400">
-          {workflow.promptIds.length} {workflow.promptIds.length === 1 ? 'Step' : 'Steps'}
+          {workflow.steps.length} {workflow.steps.length === 1 ? 'Step' : 'Steps'}
         </span>
       </div>
     </div>

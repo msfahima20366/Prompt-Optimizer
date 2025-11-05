@@ -64,6 +64,7 @@ export interface User {
   subscriptionTier: 'free' | 'premium';
   points: number;
   likedPromptIds: string[];
+  teamIds?: string[];
 }
 
 export interface Prompt {
@@ -79,7 +80,7 @@ export interface Prompt {
 }
 
 export interface LibraryPrompt {
-  id: string;
+  id:string;
   title: string;
   prompt: string;
   goal: string;
@@ -108,6 +109,7 @@ export interface CommunityPrompt {
   createdAt: number;
   likes: number;
   forks: number;
+  views: number;
 }
 
 export interface HistoryItem {
@@ -123,12 +125,34 @@ export interface Project {
   promptIds: string[];
 }
 
+export interface WorkflowStep {
+  promptId: string;
+  condition?: string; // e.g., "contains:success"
+}
+
 export interface Workflow {
   id: string;
   title: string;
   description: string;
-  promptIds: string[];
+  steps: WorkflowStep[];
 }
+
+export interface TeamMember {
+  userId: string;
+  name: string;
+  role: 'Admin' | 'Editor' | 'Viewer';
+}
+
+export interface Team {
+  id: string;
+  name: string;
+  ownerId: string;
+  members: TeamMember[];
+  sharedPromptIds: string[];
+  sharedProjectIds: string[];
+  sharedWorkflowIds: string[];
+}
+
 
 export interface UserContext {
   id: string;
