@@ -1,5 +1,7 @@
 
 
+
+
 import React, { useState, useCallback, useEffect } from 'react';
 import { Header } from './components/Header';
 import { generateImage } from './services/geminiService';
@@ -24,8 +26,9 @@ import { SaveContextModal } from './components/SaveContextModal';
 import { WorkspaceView } from './components/WorkspaceView';
 import { AnalyticsDashboardView } from './components/AnalyticsDashboardView';
 import { MatrixView } from './components/MatrixView';
+import { AIGalaxyView } from './components/AIGalaxyView';
 
-type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix';
+type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix' | 'galaxy';
 type CollectionFilter = 'all' | 'favorites';
 type Theme = 'light' | 'dark';
 
@@ -593,6 +596,8 @@ const App: React.FC = () => {
         return <AnalyticsDashboardView communityPrompts={communityPrompts} currentUser={currentUser} />;
       case 'matrix':
         return <MatrixView />;
+      case 'galaxy':
+        return <AIGalaxyView />;
       case 'projects':
         if (viewingProject) {
           const projectPrompts = userCollection.filter(p => viewingProject.promptIds.includes(p.id));
@@ -677,7 +682,7 @@ const App: React.FC = () => {
   return (
     <>
       <div className="min-h-screen flex flex-col items-center p-4 sm:p-6 font-sans text-gray-800 dark:text-gray-300">
-        <div className="w-full max-w-6xl mx-auto space-y-8">
+        <div className="w-full max-w-7xl mx-auto space-y-8">
           <Header theme={theme} toggleTheme={toggleTheme} onShowHistory={handleShowHistory} onShowCollection={handleShowCollection} onShowFavorites={handleShowFavorites} currentUser={currentUser} onShowAnalytics={handleShowAnalytics} />
           <Tabs activeView={activeView} setActiveView={(v) => { setActiveView(v); setViewingProject(null); setViewingWorkflow(null); }} />
           <main className="bg-white/70 dark:bg-gray-900/50 backdrop-blur-xl border border-gray-200 dark:border-gray-800 rounded-2xl shadow-2xl shadow-indigo-500/10 p-6 md:p-8">

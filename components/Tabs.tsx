@@ -1,6 +1,9 @@
+
+
+
 import React, { useState, useRef, useEffect } from 'react';
 
-type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix';
+type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix' | 'galaxy';
 
 interface TabsProps {
   activeView: View;
@@ -26,6 +29,7 @@ const TabButton: React.FC<{
 export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
     const mainViews: { key: View, label: string }[] = [
         { key: 'collection', label: 'Collection' },
+        { key: 'galaxy', label: 'AI Galaxy' }, // Added here for visibility
         { key: 'optimizer', label: 'Optimizer' },
         { key: 'workspace', label: 'Workspace' },
     ];

@@ -1,5 +1,4 @@
 
-
 import { GoogleGenAI, Type } from "@google/genai";
 
 const API_KEY = process.env.API_KEY;
@@ -22,7 +21,7 @@ You must return a valid JSON object with two keys: "baseIdea" and "fullPrompt".
 Do not include any other text or markdown formatting outside of the JSON object.`;
 
 const SYSTEM_INSTRUCTION_META_PROMPT = `You are a world-class AI prompt engineering expert. Your task is to take a user's composed draft, which is a collection of prompt components, and transform it into a single, cohesive, powerful, and detailed 'meta-prompt'.
-This final prompt should be structured to instruct another AI on how to generate the desired content with extreme clarity and precision.
+This final prompt should be structured to instruct another AI to generate the desired content with extreme clarity and precision.
 
 IMPORTANT INSTRUCTIONS:
 1.  If the user provides content within <context> tags, treat this as essential background information or a knowledge base. The final prompt must instruct the AI to heavily rely on this context to inform its response, treating it as a primary source of truth.
@@ -61,6 +60,41 @@ export const generatePrompt = async (
     console.error("Error generating prompt with Gemini:", error);
     throw new Error("Failed to communicate with the AI model.");
   }
+};
+
+// New Streaming Function for Live Trace
+export const generatePromptStream = async (
+  basePrompt: string,
+  temperature: number,
+  topP: number,
+  systemInstruction?: string
+): Promise<AsyncIterable<string>> => {
+    try {
+        const responseStream = await ai.models.generateContentStream({
+            model: 'gemini-2.5-flash',
+            contents: basePrompt,
+            config: {
+                systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
+                temperature: temperature,
+                topP: topP,
+            }
+        });
+
+        // We return a generator that yields text chunks
+        async function* streamGenerator() {
+            for await (const chunk of responseStream) {
+                const text = chunk.text;
+                if (text) {
+                    yield text;
+                }
+            }
+        }
+        return streamGenerator();
+
+    } catch (error) {
+        console.error("Error streaming prompt with Gemini:", error);
+        throw new Error("Failed to stream from AI model.");
+    }
 };
 
 export const optimizePrompt = async (composedPrompt: string): Promise<string> => {
