@@ -20,7 +20,7 @@ The full prompt should be a well-written paragraph.
 You must return a valid JSON object with two keys: "baseIdea" and "fullPrompt".
 Do not include any other text or markdown formatting outside of the JSON object.`;
 
-const SYSTEM_INSTRUCTION_META_PROMPT = `You are a world-class AI prompt engineering expert. Your task is to take a user's composed draft, which is a collection of prompt components, and transform it into a single, cohesive, powerful, and detailed 'meta-prompt'.
+export const SYSTEM_INSTRUCTION_META_PROMPT = `You are a world-class AI prompt engineering expert. Your task is to take a user's composed draft, which is a collection of prompt components, and transform it into a single, cohesive, powerful, and detailed 'meta-prompt'.
 This final prompt should be structured to instruct another AI to generate the desired content with extreme clarity and precision.
 
 IMPORTANT INSTRUCTIONS:
@@ -42,14 +42,15 @@ const cleanResponse = (text: string | null | undefined): string => {
 export const generatePrompt = async (
   basePrompt: string,
   temperature: number,
-  topP: number
+  topP: number,
+  systemInstruction?: string
 ): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
         model: 'gemini-2.5-flash',
         contents: basePrompt,
         config: {
-          systemInstruction: SYSTEM_INSTRUCTION_GENERATOR,
+          systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
           temperature: temperature,
           topP: topP,
         }
