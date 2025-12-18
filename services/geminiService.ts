@@ -24,10 +24,18 @@ export const SYSTEM_INSTRUCTION_META_PROMPT = `You are a world-class AI prompt e
 This final prompt should be structured to instruct another AI to generate the desired content with extreme clarity and precision.
 
 IMPORTANT INSTRUCTIONS:
-1.  If the user provides content within <context> tags, treat this as essential background information or a knowledge base. The final prompt must instruct the AI to heavily rely on this context to inform its response, treating it as a primary source of truth.
-2.  Refine the language, structure it logically, combine related instructions, and fill in any logical gaps to make the final prompt exceptionally clear and effective.
-3.  The output must ONLY be the final, optimized meta-prompt text, ready to be used. Do not include any conversational filler, introductory phrases like "Here is the optimized prompt:", or explanations about your process.
+1.  If the user provides content within <context> tags, treat this as essential background information or a knowledge base.
+2.  Refine the language, structure it logically, and fill in any logical gaps.
+3.  The output must ONLY be the final, optimized meta-prompt text, ready to be used.
 4.  The output text must be clean and free of any markdown formatting (e.g., no ** for bolding).`;
+
+export const SYSTEM_INSTRUCTION_AUDIT = `You are a Prompt Quality Auditor. Analyze the provided prompt and score it from 0-100 on three metrics: Clarity, Specificity, and Reasoning.
+Provide the results in a valid JSON object.
+Metric scores should be integers. 
+Also provide a 1-sentence "overall_verdict".`;
+
+export const SYSTEM_INSTRUCTION_CRITIQUE = `You are a Senior Prompt Engineer. Look at the optimized prompt and find 3 specific weaknesses or areas for improvement.
+Return a JSON array of objects, each with a "weakness" and a "fix_suggestion".`;
 
 
 // Helper function to clean the response text
@@ -35,7 +43,6 @@ const cleanResponse = (text: string | null | undefined): string => {
     if (!text) {
         return '';
     }
-    // Removes markdown bolding (**)
     return text.replace(/\*\*/g, '').trim();
 }
 
@@ -47,7 +54,7 @@ export const generatePrompt = async (
 ): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-3-flash-preview',
         contents: basePrompt,
         config: {
           systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
@@ -63,7 +70,6 @@ export const generatePrompt = async (
   }
 };
 
-// New Streaming Function for Live Trace
 export const generatePromptStream = async (
   basePrompt: string,
   temperature: number,
@@ -72,7 +78,7 @@ export const generatePromptStream = async (
 ): Promise<AsyncIterable<string>> => {
     try {
         const responseStream = await ai.models.generateContentStream({
-            model: 'gemini-2.5-flash',
+            model: 'gemini-3-flash-preview',
             contents: basePrompt,
             config: {
                 systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
@@ -81,7 +87,6 @@ export const generatePromptStream = async (
             }
         });
 
-        // We return a generator that yields text chunks
         async function* streamGenerator() {
             for await (const chunk of responseStream) {
                 const text = chunk.text;
@@ -98,81 +103,57 @@ export const generatePromptStream = async (
     }
 };
 
-export const optimizePrompt = async (composedPrompt: string): Promise<string> => {
-  try {
-    const response = await ai.models.generateContent({
-        model: 'gemini-2.5-pro', // Using a more powerful model for high-quality optimization
-        contents: `Here is the user's composed draft prompt:\n\n---\n\n${composedPrompt}\n\n---\n\nNow, optimize it into a meta-prompt.`,
-        config: {
-          systemInstruction: SYSTEM_INSTRUCTION_META_PROMPT,
-          temperature: 0.7,
-          topP: 0.9,
-        }
-    });
-
-    return cleanResponse(response.text);
-  } catch (error) {
-    console.error("Error optimizing prompt with Gemini:", error);
-    throw new Error("Failed to communicate with the AI model for optimization.");
-  }
-};
-
-
-export const generateSimplePrompt = async (): Promise<{ baseIdea: string; fullPrompt: string }> => {
-  const userQuery = `Generate a creative prompt concept.`;
-
-  try {
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: userQuery,
-      config: {
-        systemInstruction: SYSTEM_INSTRUCTION_SURPRISE,
-        temperature: 1.0,
-        topP: 0.95,
-        responseMimeType: "application/json",
-        responseSchema: {
-          type: Type.OBJECT,
-          properties: {
-            baseIdea: {
-              type: Type.STRING,
-              description: 'A concise, creative base idea for the prompt.',
-            },
-            fullPrompt: {
-              type: Type.STRING,
-              description: 'The full, detailed prompt paragraph.',
-            },
-          },
-          required: ["baseIdea", "fullPrompt"],
-        },
-      },
-    });
-
-    const jsonText = response.text?.trim();
-    if (!jsonText) {
-      throw new Error("Received an empty response from the AI. This might be due to content filtering.");
+export const auditPrompt = async (prompt: string): Promise<any> => {
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `Audit this prompt:\n\n${prompt}`,
+            config: {
+                systemInstruction: SYSTEM_INSTRUCTION_AUDIT,
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.OBJECT,
+                    properties: {
+                        clarity: { type: Type.INTEGER },
+                        specificity: { type: Type.INTEGER },
+                        reasoning: { type: Type.INTEGER },
+                        overall_verdict: { type: Type.STRING }
+                    },
+                    required: ["clarity", "specificity", "reasoning", "overall_verdict"]
+                }
+            }
+        });
+        return JSON.parse(response.text || '{}');
+    } catch (e) {
+        return { clarity: 0, specificity: 0, reasoning: 0, overall_verdict: "Audit failed." };
     }
+}
 
-    const parsed = JSON.parse(jsonText);
-    
-    if (typeof parsed.baseIdea === 'string' && typeof parsed.fullPrompt === 'string') {
-        return {
-            baseIdea: cleanResponse(parsed.baseIdea),
-            fullPrompt: cleanResponse(parsed.fullPrompt),
-        };
-    } else {
-        throw new Error("Invalid JSON structure received from AI.");
+export const critiquePrompt = async (prompt: string): Promise<any[]> => {
+    try {
+        const response = await ai.models.generateContent({
+            model: 'gemini-3-flash-preview',
+            contents: `Critique this prompt:\n\n${prompt}`,
+            config: {
+                systemInstruction: SYSTEM_INSTRUCTION_CRITIQUE,
+                responseMimeType: "application/json",
+                responseSchema: {
+                    type: Type.ARRAY,
+                    items: {
+                        type: Type.OBJECT,
+                        properties: {
+                            weakness: { type: Type.STRING },
+                            fix_suggestion: { type: Type.STRING }
+                        }
+                    }
+                }
+            }
+        });
+        return JSON.parse(response.text || '[]');
+    } catch (e) {
+        return [];
     }
-  } catch (error) {
-    console.error("Error generating surprise prompt with Gemini:", error);
-    if (error instanceof Error) {
-        // Re-throw specific, user-friendly errors from the try block
-        if (error.message.includes("Received an empty response") || error.message.includes("Invalid JSON structure")) {
-            throw error;
-        }
-    }
-    throw new Error("Failed to communicate with the AI model for a surprise prompt.");
-  }
-};
+}
 
 export const generateImage = async (prompt: string): Promise<string> => {
   try {
@@ -181,7 +162,7 @@ export const generateImage = async (prompt: string): Promise<string> => {
       prompt: prompt,
       config: {
         numberOfImages: 1,
-        outputMimeType: 'image/png',
+        outputMimeType: 'image/jpeg',
         aspectRatio: '1:1',
       },
     });
@@ -189,16 +170,12 @@ export const generateImage = async (prompt: string): Promise<string> => {
     const base64ImageBytes: string | undefined = response.generatedImages?.[0]?.image?.imageBytes;
 
     if (!base64ImageBytes) {
-      throw new Error("No image data received from the API. This may be due to a safety block.");
+      throw new Error("No image data received from the API.");
     }
     
-    return `data:image/png;base64,${base64ImageBytes}`;
+    return `data:image/jpeg;base64,${base64ImageBytes}`;
   } catch (error) {
     console.error("Error generating image with Gemini:", error);
-    if (error instanceof Error) {
-        // Pass the actual error message up the chain for better UI feedback
-        throw new Error(error.message);
-    }
-    throw new Error("An unexpected error occurred during image generation.");
+    throw new Error(error instanceof Error ? error.message : "Image generation failed.");
   }
 };
