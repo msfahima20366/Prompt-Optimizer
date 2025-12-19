@@ -10,8 +10,8 @@ interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
     const tabs: { key: View, label: string }[] = [
-        { key: 'collection', label: 'My Saved Prompts' },
-        { key: 'optimizer', label: 'Improve Prompt (Neural Lab)' },
+        { key: 'collection', label: 'Prompt Collection' },
+        { key: 'optimizer', label: 'Prompt Optimization' },
     ];
 
     return (

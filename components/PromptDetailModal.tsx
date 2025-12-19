@@ -1,49 +1,28 @@
 
-// Fix: Import `useMemo` from `react` to resolve the "Cannot find name 'useMemo'" error.
-import React, { useState, useEffect, useRef, useMemo } from 'react';
+import React, { useState } from 'react';
 import { Prompt, LibraryPrompt, User } from '../prompts/collection';
 
 // Icons
-const CopyIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5z" /></svg>
-);
-const CheckIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" /></svg>
-);
-const EditIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" /></svg>
-);
-const TrashIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
-);
-const StarIcon: React.FC<{isFavorite: boolean}> = ({ isFavorite }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className={`h-5 w-5 mr-2 ${isFavorite ? 'text-yellow-400' : ''}`} viewBox="0 0 20 20" fill="currentColor"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" /></svg>
-);
 const CloseIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" /></svg>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+    </svg>
+);
+const CopyIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
+    </svg>
 );
 const SaveIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
         <path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" />
     </svg>
 );
-const ShareIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8.684 13.342C8.886 12.938 9 12.482 9 12s-.114-.938-.316-1.342m0 2.684a3 3 0 110-2.684m0 2.684l6.632 3.316m-6.632-6l6.632-3.316m0 0a3 3 0 105.367-2.684 3 3 0 00-5.367 2.684zm0 9.368a3 3 0 105.367 2.684 3 3 0 00-5.367-2.684z" />
+const SparklesIcon: React.FC = () => (
+    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-indigo-500" fill="currentColor" viewBox="0 0 20 20">
+        <path fillRule="evenodd" d="M5 2a1 1 0 011 1v1h1a1 1 0 010 2H6v1a1 1 0 01-2 0V6H3a1 1 0 010-2h1V3a1 1 0 011-1zm0 10a1 1 0 011 1v1h1a1 1 0 110 2H6v1a1 1 0 11-2 0v-1H3a1 1 0 110-2h1v-1a1 1 0 011-1zM12 2a1 1 0 01.967.744L14.146 7.2 17.191 9.112a1 1 0 010 1.776l-3.045 1.912-1.212 4.456a1 1 0 01-1.922 0l-1.212-4.456-3.045-1.912a1 1 0 010-1.776l3.045-1.912 1.212-4.456A1 1 0 0112 2z" clipRule="evenodd" />
     </svg>
 );
-const GeminiIcon: React.FC = () => (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" className="w-5 h-5">
-      <defs>
-        <linearGradient id="gemini-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-          <stop offset="0%" style={{stopColor: '#4285F4'}} />
-          <stop offset="100%" style={{stopColor: '#9B72F9'}} />
-        </linearGradient>
-      </defs>
-      <path d="M12 2.5L13.849 9.151L20.5 11L13.849 12.849L12 19.5L10.151 12.849L3.5 11L10.151 9.151L12 2.5Z" stroke="url(#gemini-gradient)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-    </svg>
-);
-
 
 interface PromptDetailModalProps {
     prompt: Prompt | LibraryPrompt;
@@ -55,239 +34,126 @@ interface PromptDetailModalProps {
     onToggleFavorite?: (promptId: string) => void;
     onSave: (prompt: {title: string, prompt: string}) => void;
     currentUser: User | null;
-    onShare?: (prompt: Prompt) => void;
 }
 
-const MetaDataItem: React.FC<{label: string, value: React.ReactNode}> = ({label, value}) => (
-    <div>
-        <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">{label}</p>
-        <p className="text-gray-800 dark:text-gray-200 font-medium">{value}</p>
+const MetaItem: React.FC<{ label: string; value: string | React.ReactNode }> = ({ label, value }) => (
+    <div className="space-y-1">
+        <h4 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">{label}</h4>
+        <div className="text-sm font-semibold text-gray-700 dark:text-gray-200 leading-relaxed">{value}</div>
     </div>
 );
 
-const LLMButton: React.FC<{
-    Icon: React.FC;
-    label: string;
-    tooltip: string;
-    onClick: () => void;
-}> = ({ Icon, label, tooltip, onClick }) => (
-    <button
-        title={tooltip}
-        onClick={onClick}
-        className="flex items-center justify-center gap-2 w-full px-3 py-2 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500"
-    >
-        <Icon />
-        <span>{label}</span>
-    </button>
-);
-
-
-export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, userCollection, onClose, onEdit, onDelete, onUse, onToggleFavorite, onSave, currentUser, onShare }) => {
+export const PromptDetailModal: React.FC<PromptDetailModalProps> = ({ prompt, onClose, onSave }) => {
     const [isCopied, setIsCopied] = useState(false);
-    const [selectedSnippet, setSelectedSnippet] = useState('');
-    const [copyNotification, setCopyNotification] = useState<string | null>(null);
-    const [viewedVersion, setViewedVersion] = useState(prompt);
-    const promptDisplayRef = useRef<HTMLDivElement>(null);
-
-    const isLibraryPrompt = 'goal' in viewedVersion;
-    const userPrompt = isLibraryPrompt ? null : viewedVersion as Prompt;
-    const libraryPrompt = isLibraryPrompt ? viewedVersion as LibraryPrompt : null;
-
-    const allVersions = useMemo(() => {
-        if (isLibraryPrompt) return [];
-        return userCollection
-            .filter(p => p.versionGroupId === (prompt as Prompt).versionGroupId)
-            .sort((a, b) => b.createdAt - a.createdAt);
-    }, [userCollection, prompt, isLibraryPrompt]);
-
-    useEffect(() => {
-        const handleSelectionChange = () => {
-            const selection = window.getSelection();
-            if (selection && promptDisplayRef.current?.contains(selection.anchorNode)) {
-                 setSelectedSnippet(selection.toString().trim());
-            } else {
-                 setSelectedSnippet('');
-            }
-        };
-        document.addEventListener('selectionchange', handleSelectionChange);
-        return () => document.removeEventListener('selectionchange', handleSelectionChange);
-    }, []);
-
-    useEffect(() => {
-        if (isCopied) {
-            const timer = setTimeout(() => setIsCopied(false), 2000);
-            return () => clearTimeout(timer);
-        }
-    }, [isCopied]);
 
     const handleCopy = () => {
-        navigator.clipboard.writeText(viewedVersion.prompt);
+        navigator.clipboard.writeText(prompt.prompt);
         setIsCopied(true);
+        setTimeout(() => setIsCopied(false), 2000);
     };
 
-    const handleSaveSnippet = () => {
-        if (!selectedSnippet) return;
-        onSave({ title: `${viewedVersion.title} (Snippet)`, prompt: selectedSnippet });
-        onClose();
+    const handleSaveCopy = () => {
+        onSave({ title: prompt.title, prompt: prompt.prompt });
     };
 
-    const handleLaunch = (model: 'Gemini' | 'ChatGPT' | 'Claude') => {
-        const promptText = viewedVersion.prompt;
-    
-        if (model === 'Gemini') {
-            const url = `https://gemini.google.com/app?prompt=${encodeURIComponent(promptText)}`;
-            window.open(url, '_blank', 'noopener,noreferrer');
-            return;
-        }
-
-        const copyToClipboard = async (text: string): Promise<boolean> => {
-            // Modern, secure clipboard API
-            if (navigator.clipboard && window.isSecureContext) {
-                try {
-                    await navigator.clipboard.writeText(text);
-                    return true;
-                } catch (err) {
-                    console.error('Async clipboard API failed, falling back.', err);
-                }
-            }
-            
-            // Fallback for older browsers
-            const textArea = document.createElement("textarea");
-            textArea.value = text;
-            textArea.style.position = "fixed"; 
-            textArea.style.left = "-9999px";
-            textArea.style.top = "-9999px";
-            document.body.appendChild(textArea);
-            textArea.focus();
-            textArea.select();
-            let success = false;
-            try {
-                success = document.execCommand('copy');
-            } catch (err) {
-                console.error('Fallback: unable to copy', err);
-            }
-            document.body.removeChild(textArea);
-            return success;
-        };
-
-        copyToClipboard(promptText).then(success => {
-            if (success) {
-                setCopyNotification(`Prompt copied! Opening ${model}...`);
-            } else {
-                setCopyNotification(`Failed to copy. Please copy manually.`);
-            }
-            setTimeout(() => setCopyNotification(null), 3000);
-
-            let url = '';
-            if (model === 'ChatGPT') url = 'https://chat.openai.com/';
-            else if (model === 'Claude') url = 'https://claude.ai/chats';
-            window.open(url, '_blank', 'noopener,noreferrer');
-        });
+    const handleLaunch = (target: 'ChatGPT' | 'Claude' | 'Gemini') => {
+        // Auto save on launch as requested
+        handleSaveCopy();
+        
+        const encodedPrompt = encodeURIComponent(prompt.prompt);
+        let url = "";
+        if (target === 'ChatGPT') url = `https://chatgpt.com/?q=${encodedPrompt}`;
+        else if (target === 'Claude') url = `https://claude.ai/new?q=${encodedPrompt}`;
+        else if (target === 'Gemini') url = `https://gemini.google.com/app?q=${encodedPrompt}`;
+        
+        window.open(url, '_blank');
     };
-    
-    const actionButtonClasses = "w-full flex items-center justify-center px-4 py-2 bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200 font-semibold rounded-lg hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors";
-    const compatibleModels = isLibraryPrompt ? libraryPrompt.llmModels : ['Gemini', 'ChatGPT', 'Claude'];
+
+    // Extracting info for LibraryPrompt type
+    const libPrompt = prompt as LibraryPrompt;
+    const goal = libPrompt.goal || "Not specified";
+    const category = libPrompt.category || "General";
+    const models = libPrompt.llmModels ? libPrompt.llmModels.join(', ') : "Various";
+    const keywords = libPrompt.tags ? libPrompt.tags.join(', ') : "#ai, #prompt";
+    const technique = libPrompt.technique || "Zero-shot";
+    const temp = libPrompt.temperature !== undefined ? libPrompt.temperature : 0.7;
+    const tokens = libPrompt.tokens || "N/A";
 
     return (
-        <div className="fixed inset-0 bg-black/70 backdrop-blur-md flex items-center justify-center p-4 z-50 animate-fade-in" onClick={onClose}>
-            <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-fuchsia-500/30 rounded-2xl shadow-2xl w-full max-w-4xl max-h-[90vh] flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
-                <header className="flex items-center justify-between p-4 border-b border-gray-200 dark:border-gray-700/50 flex-shrink-0">
-                    <h2 className="text-xl font-bold gradient-text truncate pr-8">{viewedVersion.title}</h2>
-                    <button onClick={onClose} className="text-gray-500 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+        <div className="fixed inset-0 bg-slate-900/40 backdrop-blur-sm flex items-center justify-center p-4 z-[100] animate-fade-in" onClick={onClose}>
+            <div className="bg-white dark:bg-gray-900 rounded-2xl shadow-2xl w-full max-w-5xl flex flex-col overflow-hidden" onClick={e => e.stopPropagation()}>
+                
+                {/* Header Title Bar */}
+                <header className="flex items-center justify-between px-8 py-5 border-b border-gray-100 dark:border-gray-800">
+                    <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">{prompt.title}</h2>
+                    <button onClick={onClose} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-800 rounded transition-colors text-gray-400">
                         <CloseIcon />
                     </button>
                 </header>
-                
-                <div className="flex flex-col md:flex-row flex-1 min-h-0">
-                    <div className="w-full md:w-3/5 flex flex-col p-6 space-y-4 overflow-y-auto">
-                        <div ref={promptDisplayRef} className="bg-gray-50 dark:bg-gray-800/50 p-4 rounded-lg flex-1">
-                           <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap selection:bg-indigo-500/50">{viewedVersion.prompt}</p>
+
+                <div className="flex flex-col md:flex-row overflow-hidden flex-1">
+                    
+                    {/* Left Side: Prompt Content */}
+                    <div className="flex-1 p-8 flex flex-col bg-white dark:bg-gray-900">
+                        <div className="flex-1 bg-slate-50 dark:bg-gray-950/50 rounded-xl p-6 mb-6 overflow-y-auto border border-slate-100 dark:border-gray-800">
+                            <p className="text-base text-slate-700 dark:text-gray-300 whitespace-pre-wrap leading-relaxed">
+                                {prompt.prompt}
+                            </p>
                         </div>
-                        <div className="flex items-center gap-3 text-sm flex-wrap">
-                            <button onClick={handleCopy} className="flex items-center justify-center px-4 py-2 bg-indigo-600 text-white font-semibold rounded-lg hover:bg-indigo-500 transition-colors">
-                               {isCopied ? <CheckIcon /> : <CopyIcon />}
-                               {isCopied ? 'Copied!' : 'Copy Full Prompt'}
+                        <div className="flex justify-start">
+                            <button 
+                                onClick={handleCopy}
+                                className={`flex items-center px-5 py-3 rounded-lg text-xs font-bold uppercase transition-all shadow-md ${isCopied ? 'bg-emerald-500 text-white' : 'bg-[#4F46E5] text-white hover:bg-indigo-700'}`}
+                            >
+                                <CopyIcon />
+                                {isCopied ? 'Copied' : 'Copy Full Prompt'}
                             </button>
-                            {selectedSnippet && (
-                                <button onClick={handleSaveSnippet} className="flex animate-fade-in items-center justify-center px-4 py-2 bg-purple-600 text-white font-semibold rounded-lg hover:bg-purple-500 transition-colors">
-                                   <SaveIcon/> Save Snippet
-                                </button>
-                            )}
                         </div>
                     </div>
-                    
-                    <div className="w-full md:w-2/5 bg-gray-50/50 dark:bg-gray-900/40 p-6 space-y-5 border-t md:border-t-0 md:border-l border-gray-200 dark:border-gray-700/50 overflow-y-auto">
-                        {allVersions.length > 1 && (
-                            <div>
-                                <label htmlFor="version-history" className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider">Version History</label>
-                                <select 
-                                    id="version-history"
-                                    value={viewedVersion.id}
-                                    onChange={e => setViewedVersion(allVersions.find(v => v.id === e.target.value) || viewedVersion)}
-                                    className="mt-1 w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm pl-3 pr-10 py-2 text-left cursor-default focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm"
+
+                    {/* Right Side: Metadata Sidebar */}
+                    <div className="w-full md:w-80 border-l border-gray-100 dark:border-gray-800 p-8 space-y-7 bg-white dark:bg-gray-900 overflow-y-auto">
+                        <MetaItem label="Goal" value={goal} />
+                        <MetaItem label="Category" value={category} />
+                        <MetaItem label="Compatible Models" value={models} />
+                        <MetaItem label="Keywords" value={keywords} />
+                        <MetaItem label="Technique" value={technique} />
+                        <MetaItem label="Suggested Temp." value={temp.toString()} />
+                        <MetaItem label="Approx. Tokens" value={tokens.toString()} />
+                        
+                        <hr className="border-gray-100 dark:border-gray-800" />
+
+                        <div className="space-y-4">
+                            <h4 className="text-[10px] font-bold text-gray-400 dark:text-gray-500 uppercase tracking-wider">Launch In</h4>
+                            <div className="flex flex-wrap gap-2">
+                                <button 
+                                    onClick={() => handleLaunch('Gemini')}
+                                    className="flex items-center px-4 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-100 dark:border-gray-700 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-200 hover:border-indigo-400 transition-all"
                                 >
-                                    {allVersions.map((v, i) => (
-                                        <option key={v.id} value={v.id}>
-                                            Version {allVersions.length - i} ({new Date(v.createdAt).toLocaleString()})
-                                        </option>
-                                    ))}
-                                </select>
+                                    <SparklesIcon /> Gemini
+                                </button>
+                                <button 
+                                    onClick={() => handleLaunch('ChatGPT')}
+                                    className="px-4 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-100 dark:border-gray-700 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-200 hover:border-indigo-400 transition-all"
+                                >
+                                    ChatGPT
+                                </button>
+                                <button 
+                                    onClick={() => handleLaunch('Claude')}
+                                    className="flex items-center px-4 py-2 bg-slate-50 dark:bg-gray-800 border border-slate-100 dark:border-gray-700 rounded-lg text-xs font-bold text-slate-700 dark:text-gray-200 hover:border-indigo-400 transition-all"
+                                >
+                                    <SparklesIcon /> Claude
+                                </button>
                             </div>
-                        )}
-                        <MetaDataItem label="Goal" value={isLibraryPrompt ? libraryPrompt.goal : 'A prompt from your personal collection.'} />
-                        {libraryPrompt?.category && <MetaDataItem label="Category" value={libraryPrompt.category} />}
-                        {userPrompt?.category && <MetaDataItem label="Category" value={userPrompt.category} />}
-                        
-                        {libraryPrompt?.llmModels && <MetaDataItem label="Compatible Models" value={libraryPrompt.llmModels.join(', ')} />}
-                        {libraryPrompt?.tags && <MetaDataItem label="Keywords" value={libraryPrompt.tags.join(', ')} />}
-                        {libraryPrompt?.technique && <MetaDataItem label="Technique" value={libraryPrompt.technique} />}
-                        {libraryPrompt?.temperature && <MetaDataItem label="Suggested Temp." value={libraryPrompt.temperature.toFixed(1)} />}
-                        {libraryPrompt?.tokens && <MetaDataItem label="Approx. Tokens" value={libraryPrompt.tokens} />}
-                        
-                        <div className="pt-4 border-t border-gray-200 dark:border-gray-700/50 space-y-3">
-                            <div>
-                                <p className="text-xs text-gray-500 dark:text-gray-400 font-semibold uppercase tracking-wider mb-2">
-                                    Launch In
-                                </p>
-                                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                                    {compatibleModels.includes('Gemini') && ( <LLMButton Icon={GeminiIcon} label="Gemini" tooltip="Best for creative tasks and complex reasoning. (Pre-fills prompt)" onClick={() => handleLaunch('Gemini')} /> )}
-                                    {compatibleModels.includes('ChatGPT') && ( <LLMButton Icon={GeminiIcon} label="ChatGPT" tooltip="Great all-rounder for a variety of tasks. (Copies prompt)" onClick={() => handleLaunch('ChatGPT')} /> )}
-                                    {compatibleModels.includes('Claude') && ( <LLMButton Icon={GeminiIcon} label="Claude" tooltip="Excellent for long-form content and detailed analysis. (Copies prompt)" onClick={() => handleLaunch('Claude')} /> )}
-                                </div>
-                                {copyNotification && ( <p className="text-center text-sm text-indigo-500 dark:text-indigo-400 mt-2 animate-fade-in">{copyNotification}</p> )}
-                            </div>
-
-                             <button onClick={() => onSave({title: viewedVersion.title, prompt: viewedVersion.prompt})} className={actionButtonClasses}>
-                                <SaveIcon />
-                                Save a Copy
-                            </button>
-
-                            {!isLibraryPrompt && onEdit && onToggleFavorite && onDelete && userPrompt && (
-                                <>
-                                    {currentUser?.subscriptionTier === 'premium' && onShare && (
-                                        <button 
-                                            onClick={() => onShare(userPrompt)} 
-                                            disabled={userPrompt.isShared}
-                                            className={`${actionButtonClasses} disabled:opacity-50 disabled:cursor-not-allowed`}>
-                                            <ShareIcon />
-                                            {userPrompt.isShared ? 'Already Shared' : 'Share to Community'}
-                                        </button>
-                                    )}
-                                    <button onClick={() => onToggleFavorite(userPrompt.id)} className={actionButtonClasses}>
-                                        <StarIcon isFavorite={!!userPrompt.isFavorite} />
-                                        {userPrompt.isFavorite ? 'Unfavorite' : 'Favorite'}
-                                    </button>
-                                     <button onClick={() => onEdit(userPrompt)} className={actionButtonClasses}>
-                                        <EditIcon />
-                                        Edit
-                                    </button>
-                                    <button onClick={() => onDelete(userPrompt)} className="w-full flex items-center justify-center px-4 py-2 bg-red-100 text-red-700 dark:bg-red-800/50 dark:text-red-300 font-semibold rounded-lg hover:bg-red-200 dark:hover:bg-red-700/50 hover:text-red-800 dark:hover:text-white transition-colors">
-                                        <TrashIcon />
-                                        Delete Prompt & Versions
-                                    </button>
-                                </>
-                            )}
                         </div>
+
+                        <button 
+                            onClick={handleSaveCopy}
+                            className="w-full flex items-center justify-center px-4 py-3 bg-slate-100 dark:bg-gray-800 text-slate-700 dark:text-gray-200 rounded-lg text-xs font-bold uppercase tracking-tight hover:bg-slate-200 dark:hover:bg-gray-700 transition-all border border-transparent"
+                        >
+                            <SaveIcon />
+                            Save a Copy
+                        </button>
                     </div>
                 </div>
             </div>

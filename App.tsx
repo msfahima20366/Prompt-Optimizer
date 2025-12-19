@@ -9,6 +9,7 @@ import { PromptDetailModal } from './components/PromptDetailModal';
 import { HistoryModal } from './components/HistoryModal';
 import { OptimizerView } from './components/OptimizerView';
 import { SaveContextModal } from './components/SaveContextModal';
+import { UserVaultModal } from './components/UserVaultModal';
 
 type View = 'collection' | 'optimizer';
 type Theme = 'light' | 'dark';
@@ -21,6 +22,7 @@ const App: React.FC = () => {
   const [viewingPrompt, setViewingPrompt] = useState<Prompt | LibraryPrompt | null>(null);
   const [isHistoryModalOpen, setIsHistoryModalOpen] = useState<boolean>(false);
   const [isSaveContextModalOpen, setIsSaveContextModalOpen] = useState<boolean>(false);
+  const [isVaultOpen, setIsVaultOpen] = useState<boolean>(false);
 
   const [userCollection, setUserCollection] = useState<Prompt[]>(() => {
     try { const saved = localStorage.getItem('userCollection'); return saved ? JSON.parse(saved) : []; } catch (e) { return []; }
@@ -79,17 +81,7 @@ const App: React.FC = () => {
         />;
       default: 
         return <CollectionView 
-          userCollection={userCollection} 
           onViewPrompt={setViewingPrompt} 
-          onToggleFavorite={(id) => setUserCollection(prev => prev.map(p => p.id === id ? { ...p, isFavorite: !p.isFavorite } : p))} 
-          onForkPrompt={() => {}} 
-          collectionFilter='all'
-          selectedIds={new Set()}
-          onToggleSelect={() => {}}
-          onClearSelection={() => {}}
-          onBulkDelete={() => {}}
-          onBulkToggleFavorite={() => {}}
-          onBulkAddToProject={() => {}}
         />;
     }
   };
@@ -104,8 +96,8 @@ const App: React.FC = () => {
           theme={theme} 
           toggleTheme={toggleTheme} 
           onShowHistory={() => setIsHistoryModalOpen(true)} 
-          onShowCollection={() => setActiveView('collection')} 
-          onShowFavorites={() => setActiveView('collection')} 
+          onShowCollection={() => setIsVaultOpen(true)} 
+          onShowFavorites={() => setIsVaultOpen(true)} 
           currentUser={currentUser} 
           onShowAnalytics={() => {}} 
         />
@@ -128,6 +120,7 @@ const App: React.FC = () => {
       {isHistoryModalOpen && <HistoryModal isOpen={true} history={promptHistory} onClose={() => setIsHistoryModalOpen(false)} onUse={(p) => { addToHistory(p); setIsHistoryModalOpen(false); }} onDelete={() => {}} onClearAll={() => setPromptHistory([])} />}
       {viewingPrompt && <PromptDetailModal prompt={viewingPrompt} userCollection={userCollection} onClose={() => setViewingPrompt(null)} onSave={(p) => setSavingPrompt(p)} onUse={() => {}} currentUser={currentUser} />}
       {isSaveContextModalOpen && <SaveContextModal onSave={(t, c) => { setUserContexts(p => [...p, {id: Date.now().toString(), title: t, content: c}]); setIsSaveContextModalOpen(false); }} onCancel={() => setIsSaveContextModalOpen(false)} />}
+      {isVaultOpen && <UserVaultModal isOpen={isVaultOpen} onClose={() => setIsVaultOpen(false)} userCollection={userCollection} onViewPrompt={setViewingPrompt} onToggleFavorite={(id) => setUserCollection(prev => prev.map(p => p.id === id ? { ...p, isFavorite: !p.isFavorite } : p))} />}
     </div>
   );
 };
