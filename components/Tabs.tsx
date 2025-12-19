@@ -10,7 +10,7 @@ interface TabsProps {
 
 export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
     const mainItems: { key: View, label: string, title: string }[] = [
-        { key: 'collection', label: 'My Matrix', title: "Manage your saved prompts and favorites" },
+        { key: 'collection', label: 'Prompt Collection', title: "Manage your saved prompts and favorites" },
         { key: 'optimizer', label: 'Optimizer', title: "Synthesize high-performance meta-prompts" },
         { key: 'workspace', label: 'Workspace', title: "Collaborative area for team projects" },
     ];
