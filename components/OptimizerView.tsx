@@ -82,6 +82,7 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSa
 
     const [isOptimizing, setIsOptimizing] = useState(false);
     const [isAuditing, setIsAuditing] = useState(false);
+    const [optimizationError, setOptimizationError] = useState<string | null>(null);
     const [activeDraft, setActiveDraft] = useState<Iteration | null>(null);
     const [critiques, setCritiques] = useState<{ weakness: string; fix_suggestion: string }[]>([]);
     const [showInsights, setShowInsights] = useState(true);
@@ -119,6 +120,7 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSa
     const handleOptimize = async (feedback?: string) => {
         if (!basePrompt.trim() || isOptimizing) return;
         setIsOptimizing(true);
+        setOptimizationError(null);
         setCritiques([]);
 
         try {
@@ -157,8 +159,14 @@ ${feedback ? `\nFEEDBACK REFINEMENT: ${feedback}` : ''}
             const crit = await critiquePrompt(fullText);
             setCritiques(crit);
             setActiveDraft({ id: Date.now().toString(), prompt: fullText, timestamp: Date.now(), audit: auditData });
-        } catch (e) {
-            alert("Connection lost. This usually happens if your browser blocks the connection or the API Key is invalid.");
+        } catch (e: any) {
+            console.error("Optimization Failure:", e);
+            const msg = e.message || "Connection failed.";
+            if (msg.includes("blocked") || msg.includes("Failed to fetch")) {
+                setOptimizationError("Connection blocked by browser or network. Please disable VPN or Ad-blockers and try again.");
+            } else {
+                setOptimizationError("Neural Core Timeout. Please check your API key and network stability.");
+            }
         } finally {
             setIsOptimizing(false);
             setIsAuditing(false);
@@ -348,6 +356,18 @@ ${feedback ? `\nFEEDBACK REFINEMENT: ${feedback}` : ''}
                                 )}
                             </div>
                         </div>
+
+                        {optimizationError && (
+                            <div className="p-6 bg-rose-50 dark:bg-rose-950/30 border-2 border-rose-200 dark:border-rose-900 rounded-3xl animate-fade-in flex items-center gap-4">
+                                <div className="p-3 bg-rose-500 text-white rounded-2xl">
+                                    <Icons.Safety />
+                                </div>
+                                <div>
+                                    <p className="text-sm font-black text-rose-700 dark:text-rose-300 uppercase tracking-widest">Synthesis Blocked</p>
+                                    <p className="text-xs font-bold text-rose-600 dark:text-rose-400 mt-1">{optimizationError}</p>
+                                </div>
+                            </div>
+                        )}
 
                         <div className="flex justify-between items-center pt-10 border-t border-slate-100 dark:border-slate-800">
                             <div className="flex flex-col">
