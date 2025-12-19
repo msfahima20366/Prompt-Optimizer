@@ -5,88 +5,80 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prompt Matrix | Advanced AI Engineering</title>
+    <title>Prompt Matrix | Professional Engineering</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
         darkMode: 'class',
         theme: {
           extend: {
-            borderRadius: {
-              '4xl': '2rem',
-              '5xl': '2.5rem',
-              '6xl': '3rem',
+            fontFamily: {
+              sans: ['Inter', 'system-ui', 'sans-serif'],
+              mono: ['JetBrains Mono', 'monospace'],
             },
             colors: {
               brand: {
-                primary: '#f59e0b',
-                accent: '#ea580c',
-                navy: '#0f172a',
+                indigo: '#6366f1',
                 amber: '#f59e0b',
+                slate: {
+                  50: '#f8fafc',
+                  100: '#f1f5f9',
+                  200: '#e2e8f0',
+                  800: '#1e293b',
+                  900: '#0f172a',
+                  950: '#020617',
+                }
               }
             },
             boxShadow: {
-              'hard': '4px 4px 0px #b45309',
+              'premium': '0 20px 50px -12px rgba(0, 0, 0, 0.08), 0 0 1px 0 rgba(0,0,0,0.1)',
+              'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
             }
           }
         }
       }
     </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;800;900&family=JetBrains+Mono:wght@500&display=swap');
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
       
       :root {
-        --brand-primary: #f59e0b;
+        --brand-indigo: #6366f1;
         font-family: 'Inter', sans-serif;
       }
       
       body {
-        transition: background-color 0.5s ease;
-        background-attachment: fixed;
+        transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        background-color: #f8fafc;
         -webkit-font-smoothing: antialiased;
       }
 
-      /* Premium Golden Mesh Background */
-      html:not(.dark) body {
-        background-color: #fffef0;
-        background-image: 
-          radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.12) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(234, 88, 12, 0.08) 0px, transparent 50%);
-      }
-      
-      html.dark body {
-        background-color: #0c0a09;
-        background-image: 
-          radial-gradient(at 0% 0%, rgba(245, 158, 11, 0.15) 0px, transparent 50%),
-          radial-gradient(at 100% 100%, rgba(180, 83, 9, 0.1) 0px, transparent 50%);
+      .dark body {
+        background-color: #020617;
       }
 
       .glass-card {
         background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(25px);
-        border: 1px solid rgba(245, 158, 11, 0.2);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.4);
       }
 
       .dark .glass-card {
-        background: rgba(28, 25, 23, 0.6);
-        backdrop-filter: blur(25px);
-        border: 1px solid rgba(245, 158, 11, 0.1);
+        background: rgba(15, 23, 42, 0.6);
+        border: 1px solid rgba(255, 255, 255, 0.05);
       }
 
-      .gradient-text {
-        background: linear-gradient(135deg, #f59e0b 0%, #ea580c 50%, #b45309 100%);
-        -webkit-background-clip: text;
-        background-clip: text;
-        color: transparent;
+      .custom-scrollbar::-webkit-scrollbar { width: 5px; }
+      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.15); border-radius: 20px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.3); }
+
+      @keyframes fadeUp {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
       }
+      .animate-fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
 
-      @keyframes fade-in { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
-      .animate-fade-in { animation: fade-in 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
-
-      ::-webkit-scrollbar { width: 6px; }
-      ::-webkit-scrollbar-track { background: transparent; }
-      ::-webkit-scrollbar-thumb { background: rgba(245, 158, 11, 0.3); border-radius: 10px; }
-      ::-webkit-scrollbar-thumb:hover { background: rgba(245, 158, 11, 0.5); }
+      .selection-indigo::selection { background: rgba(99, 102, 241, 0.2); color: #4338ca; }
     </style>
   <script type="importmap">
 {
@@ -99,7 +91,7 @@
 }
 </script>
 </head>
-  <body>
+  <body class="selection-indigo">
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>
