@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect, useRef } from 'react';
 import { generatePromptStream } from '../services/geminiService';
 
@@ -9,7 +10,7 @@ type PipelineStage =
     | 'tokenization' 
     | 'embedding_lookup'
     | 'positional_encoding'
-    | 'self_attention'
+    | 'self_attention' 
     | 'feed_forward' 
     | 'logits_calc'
     | 'sampling_decoding'
@@ -536,7 +537,11 @@ export const AIGalaxyView: React.FC = () => {
                              </p>
                         </div>
                         {stage === 'finished' && (
-                            <button onClick={handleReset} className="mt-8 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-bold transition-all flex items-center gap-2">
+                            <button 
+                              onClick={handleReset} 
+                              title="Clear current state and reset the inference pipeline"
+                              className="mt-8 px-6 py-3 bg-gray-800 hover:bg-gray-700 text-white rounded-full font-bold transition-all flex items-center gap-2"
+                            >
                                 <Icons.Reset /> Start New Inference
                             </button>
                         )}
@@ -553,7 +558,10 @@ export const AIGalaxyView: React.FC = () => {
         const isPast = Object.keys(STAGE_DETAILS).indexOf(stage) > Object.keys(STAGE_DETAILS).indexOf(s);
         
         return (
-            <div className="flex flex-col items-center gap-2 min-w-[64px]">
+            <div 
+              className="flex flex-col items-center gap-2 min-w-[64px]"
+              title={`${STAGE_DETAILS[s].title}: ${STAGE_DETAILS[s].subtitle}`}
+            >
                 <div className={`w-3 h-3 rounded-full transition-all duration-500 ${isActive ? 'bg-indigo-500 scale-150 shadow-[0_0_10px_#6366f1]' : isPast ? 'bg-green-500' : 'bg-gray-800'}`}></div>
                 <div className={`text-[10px] font-bold uppercase tracking-wider ${isActive ? 'text-indigo-400' : 'text-gray-600'}`}>
                     {s.split('_')[0]}
@@ -577,10 +585,12 @@ export const AIGalaxyView: React.FC = () => {
                         onChange={e => setPromptText(e.target.value)}
                         placeholder="Enter system prompt..."
                         disabled={isPlaying}
+                        title="Enter a query to visualize its neural processing path"
                     />
                     <button 
                         onClick={() => !isPlaying && runSimulation()}
                         disabled={isPlaying}
+                        title="Initialize the inference cycle for the given prompt"
                         className="bg-indigo-600 hover:bg-indigo-500 text-white px-4 py-1.5 rounded-full text-xs font-bold transition-all disabled:opacity-50"
                     >
                         {isPlaying ? 'Running...' : 'Initialize'}
@@ -605,16 +615,24 @@ export const AIGalaxyView: React.FC = () => {
                         {/* Controls */}
                         <div className="absolute bottom-6 left-1/2 -translate-x-1/2 flex items-center gap-3 bg-gray-900/90 border border-gray-700 p-2 rounded-xl shadow-xl backdrop-blur-md z-30">
                             <div className="flex bg-black/50 rounded-lg p-1">
-                                <button onClick={() => setIsAutoMode(true)} className={`px-3 py-1 text-xs font-bold rounded ${isAutoMode ? 'bg-indigo-600 text-white' : 'text-gray-500'}`}>Auto</button>
-                                <button onClick={() => setIsAutoMode(false)} className={`px-3 py-1 text-xs font-bold rounded ${!isAutoMode ? 'bg-indigo-600 text-white' : 'text-gray-500'}`}>Manual</button>
+                                <button onClick={() => setIsAutoMode(true)} title="Run the simulation automatically" className={`px-3 py-1 text-xs font-bold rounded ${isAutoMode ? 'bg-indigo-600 text-white' : 'text-gray-500'}`}>Auto</button>
+                                <button onClick={() => setIsAutoMode(false)} title="Control the simulation manually step-by-step" className={`px-3 py-1 text-xs font-bold rounded ${!isAutoMode ? 'bg-indigo-600 text-white' : 'text-gray-500'}`}>Manual</button>
                             </div>
                             {(!isAutoMode || !isPlaying) && stage !== 'idle' && stage !== 'finished' && (
-                                <button onClick={handleNext} className="flex items-center gap-2 px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold animate-pulse">
+                                <button 
+                                  onClick={handleNext} 
+                                  title="Proceed to the next logical stage of the model's pipeline"
+                                  className="flex items-center gap-2 px-4 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded-lg text-xs font-bold animate-pulse"
+                                >
                                     Next Step <Icons.Next />
                                 </button>
                             )}
                             {isAutoMode && stage !== 'idle' && stage !== 'finished' && (
-                                <button onClick={() => { setIsPlaying(!isPlaying); if(!isPlaying) handleNext(); }} className="p-2 hover:bg-gray-700 rounded-full transition-colors">
+                                <button 
+                                  onClick={() => { setIsPlaying(!isPlaying); if(!isPlaying) handleNext(); }} 
+                                  title={isPlaying ? "Pause the neural trace playback" : "Resume the neural trace playback"}
+                                  className="p-2 hover:bg-gray-700 rounded-full transition-colors"
+                                >
                                     {isPlaying ? <Icons.Pause /> : <Icons.Play />}
                                 </button>
                             )}
@@ -646,7 +664,7 @@ export const AIGalaxyView: React.FC = () => {
                         {/* Analogy */}
                         <div className="bg-gradient-to-br from-amber-900/10 to-transparent border border-amber-500/20 rounded-xl p-5">
                             <h4 className="text-xs font-bold text-amber-600 uppercase mb-2">Real World Analogy</h4>
-                            <p className="text-sm text-amber-100/80 italic leading-relaxed">"{STAGE_DETAILS[stage].analogy}"</p>
+                            <p className="text-sm text-amber-100/80  leading-relaxed">"{STAGE_DETAILS[stage].analogy}"</p>
                         </div>
 
                         {/* Console Log */}

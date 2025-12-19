@@ -1,6 +1,4 @@
 
-
-
 import React, { useState, useRef, useEffect } from 'react';
 
 type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix' | 'galaxy';
@@ -10,104 +8,71 @@ interface TabsProps {
   setActiveView: (view: View) => void;
 }
 
-const TabButton: React.FC<{
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}> = ({ label, isActive, onClick }) => {
-  const baseClasses = "flex-shrink-0 text-center px-4 py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900";
-  const activeClasses = "bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-lg";
-  const inactiveClasses = "bg-transparent text-gray-500 hover:bg-gray-300/50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800/60";
-
-  return (
-    <button onClick={onClick} className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}>
-      {label}
-    </button>
-  );
-};
-
 export const Tabs: React.FC<TabsProps> = ({ activeView, setActiveView }) => {
-    const mainViews: { key: View, label: string }[] = [
-        { key: 'collection', label: 'Collection' },
-        { key: 'galaxy', label: 'AI Galaxy' }, // Added here for visibility
-        { key: 'optimizer', label: 'Optimizer' },
-        { key: 'workspace', label: 'Workspace' },
+    const mainItems: { key: View, label: string, title: string }[] = [
+        { key: 'collection', label: 'My Matrix', title: "Manage your saved prompts and favorites" },
+        { key: 'optimizer', label: 'Optimizer', title: "Synthesize high-performance meta-prompts" },
+        { key: 'workspace', label: 'Workspace', title: "Collaborative area for team projects" },
     ];
 
-    const dropdownViews: { key: View, label: string, isComingSoon?: boolean }[] = [
-        { key: 'community', label: 'Community' },
-        { key: 'projects', label: 'Projects' },
-        { key: 'workflows', label: 'Workflows' },
-        { key: 'matrix', label: 'Matrix' },
-        { key: 'builder', label: 'Builder', isComingSoon: true },
+    const researchItems: { key: View, label: string, title: string, soon?: boolean }[] = [
+        { key: 'matrix', label: 'Parameter Matrix', title: "A/B test prompt variables and model parameters" },
+        { key: 'galaxy', label: 'Inference Trace', title: "Visualize the inner mechanics of LLM reasoning" },
+        { key: 'community', label: 'Community Feed', title: "Discover and fork prompts from other creators" },
+        { key: 'builder', label: 'Studio Pro', title: "Advanced image prompt synthesis tools", soon: true },
     ];
     
-    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement>(null);
+    const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const menuRef = useRef<HTMLDivElement>(null);
 
     useEffect(() => {
-        const handleClickOutside = (event: MouseEvent) => {
-            if (dropdownRef.current && !dropdownRef.current.contains(event.target as Node)) {
-                setIsDropdownOpen(false);
-            }
-        };
-        document.addEventListener("mousedown", handleClickOutside);
-        return () => document.removeEventListener("mousedown", handleClickOutside);
+        const close = (e: MouseEvent) => { if (menuRef.current && !menuRef.current.contains(e.target as Node)) setIsMenuOpen(false); };
+        document.addEventListener("mousedown", close);
+        return () => document.removeEventListener("mousedown", close);
     }, []);
 
-    const activeDropdownView = dropdownViews.find(v => v.key === activeView);
-    const dropdownButtonLabel = activeDropdownView ? activeDropdownView.label : 'More';
-    const isDropdownActive = !!activeDropdownView;
-
-    const handleDropdownItemClick = (view: View) => {
-        setActiveView(view);
-        setIsDropdownOpen(false);
-    };
-
-    const DropdownButton: React.FC = () => {
-        const baseClasses = "flex items-center gap-2 flex-shrink-0 text-center px-4 py-2.5 text-sm sm:text-base font-bold rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50 dark:focus:ring-offset-gray-900";
-        const activeClasses = "bg-gradient-to-r from-amber-500 to-yellow-400 text-white shadow-lg";
-        const inactiveClasses = "bg-transparent text-gray-500 hover:bg-gray-300/50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800/60";
-        
-        return (
-            <button onClick={() => setIsDropdownOpen(prev => !prev)} className={`${baseClasses} ${isDropdownActive ? activeClasses : inactiveClasses}`}>
-                {dropdownButtonLabel}
-                <svg xmlns="http://www.w3.org/2000/svg" className={`h-4 w-4 transition-transform duration-200 ${isDropdownOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                </svg>
-            </button>
-        );
-    };
+    const isResearchActive = researchItems.some(i => i.key === activeView);
 
     return (
-        <div className="flex items-center bg-gray-200/60 dark:bg-gray-900/50 p-1 rounded-xl border border-gray-300 dark:border-gray-700/80 space-x-1 sm:space-x-2 overflow-x-auto">
-            {mainViews.map(({ key, label }) => (
-                <TabButton
-                    key={key}
-                    label={label}
-                    isActive={activeView === key}
-                    onClick={() => setActiveView(key)}
-                />
+        <nav className="flex items-center gap-1.5 p-2 bg-white/60 dark:bg-stone-950/60 backdrop-blur-2xl border border-amber-100 dark:border-stone-800 rounded-[2.5rem] shadow-2xl shadow-amber-500/5">
+            {mainItems.map(item => (
+                <button
+                    key={item.key}
+                    onClick={() => setActiveView(item.key)}
+                    title={item.title}
+                    className={`relative px-8 py-3.5 text-xs font-black uppercase tracking-widest transition-all duration-500 rounded-[2rem] ${activeView === item.key ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xl shadow-amber-500/30 scale-105 border-b-2 border-orange-700' : 'text-stone-500 hover:bg-amber-50 dark:hover:bg-stone-900 hover:text-brand-navy dark:hover:text-white'}`}
+                >
+                    {item.label}
+                    {activeView === item.key && <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 bg-white rounded-full"></span>}
+                </button>
             ))}
-            <div className="relative" ref={dropdownRef}>
-                <DropdownButton />
-                {isDropdownOpen && (
-                    <div className="absolute right-0 sm:left-0 mt-2 w-48 bg-white/80 dark:bg-gray-800/90 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl animate-fade-in z-20">
-                        <div className="p-2 space-y-1">
-                            {dropdownViews.map(({ key, label, isComingSoon }) => (
-                                <button
-                                    key={key}
-                                    onClick={() => !isComingSoon && handleDropdownItemClick(key)}
-                                    disabled={isComingSoon}
-                                    className="block w-full text-left px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700/80 transition-colors rounded-md font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
-                                >
-                                    {label} {isComingSoon && <em className="text-xs opacity-60">(Soon)</em>}
-                                </button>
-                            ))}
-                        </div>
+
+            <div className="relative" ref={menuRef}>
+                <button
+                    onClick={() => setIsMenuOpen(!isMenuOpen)}
+                    title="Access advanced research and community features"
+                    className={`flex items-center gap-3 px-8 py-3.5 text-xs font-black uppercase tracking-widest transition-all rounded-[2rem] ${isResearchActive ? 'bg-gradient-to-br from-amber-500 to-orange-500 text-white shadow-xl shadow-amber-500/30 border-b-2 border-orange-700' : 'text-stone-500 hover:bg-amber-50 dark:hover:bg-stone-900'}`}
+                >
+                    Research
+                    <svg className={`w-4 h-4 transition-transform duration-500 ${isMenuOpen ? 'rotate-180' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M19 9l-7 7-7-7" /></svg>
+                </button>
+
+                {isMenuOpen && (
+                    <div className="absolute right-0 mt-4 w-72 bg-white/95 dark:bg-stone-900/95 backdrop-blur-xl border border-amber-100 dark:border-stone-800 rounded-[2.5rem] shadow-[0_40px_80px_-15px_rgba(180,83,9,0.3)] p-3 animate-fade-in overflow-hidden z-[100]">
+                        {researchItems.map(item => (
+                            <button
+                                key={item.key}
+                                onClick={() => { if(!item.soon) { setActiveView(item.key); setIsMenuOpen(false); } }}
+                                title={item.title}
+                                className={`w-full flex justify-between items-center px-6 py-4 text-xs font-black uppercase tracking-widest rounded-2xl transition-all ${activeView === item.key ? 'bg-amber-50 dark:bg-amber-900/20 text-orange-600 dark:text-amber-400' : 'text-stone-600 dark:text-stone-400 hover:bg-amber-50 dark:hover:bg-stone-800/50 hover:text-orange-600'} ${item.soon ? 'opacity-30 cursor-not-allowed' : ''}`}
+                            >
+                                {item.label}
+                                {item.soon && <span className="text-[8px] bg-amber-200 dark:bg-stone-700 px-2 py-0.5 rounded-full">Soon</span>}
+                            </button>
+                        ))}
                     </div>
                 )}
             </div>
-        </div>
+        </nav>
     );
 };

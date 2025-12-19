@@ -13,21 +13,14 @@ const SYSTEM_INSTRUCTION_GENERATOR = `You are a helpful and creative AI assistan
 Adhere to any specific constraints or formats mentioned in the prompt.
 The output should be clean text, without any markdown formatting like bolding (**).`;
 
-const SYSTEM_INSTRUCTION_SURPRISE = `You are a creative idea generator.
-Your task is to invent a compelling and concise base idea for a prompt, and then expand that idea into a full, detailed paragraph.
-The base idea should be a short phrase (e.g., "explain the concept of gravity to a 5-year-old").
-The full prompt should be a well-written paragraph.
-You must return a valid JSON object with two keys: "baseIdea" and "fullPrompt".
-Do not include any other text or markdown formatting outside of the JSON object.`;
-
-export const SYSTEM_INSTRUCTION_META_PROMPT = `You are a world-class AI prompt engineering expert. Your task is to take a user's composed draft, which is a collection of prompt components, and transform it into a single, cohesive, powerful, and detailed 'meta-prompt'.
+export const SYSTEM_INSTRUCTION_META_PROMPT = `You are a world-class AI prompt engineering expert. Your task is to take a user's composed draft and transform it into a single, cohesive, powerful, and detailed 'meta-prompt'.
 This final prompt should be structured to instruct another AI to generate the desired content with extreme clarity and precision.
 
-IMPORTANT INSTRUCTIONS:
-1.  If the user provides content within <context> tags, treat this as essential background information or a knowledge base.
-2.  Refine the language, structure it logically, and fill in any logical gaps.
-3.  The output must ONLY be the final, optimized meta-prompt text, ready to be used.
-4.  The output text must be clean and free of any markdown formatting (e.g., no ** for bolding).`;
+ENGINEERING REQUIREMENTS:
+1. Apply the user's selected 'Applied Patterns' (e.g. Chain of Thought, Persona, etc.) deeply into the structural logic.
+2. Use professional delimiters (e.g. ###, ---, <context>) to separate sections.
+3. Define the AI's role, constraints, and objective with surgical precision.
+4. Keep the output as raw text without any markdown (no ** for bold).`;
 
 export const SYSTEM_INSTRUCTION_AUDIT = `You are a Prompt Quality Auditor. Analyze the provided prompt and score it from 0-100 on three metrics: Clarity, Specificity, and Reasoning.
 Provide the results in a valid JSON object.
@@ -37,12 +30,8 @@ Also provide a 1-sentence "overall_verdict".`;
 export const SYSTEM_INSTRUCTION_CRITIQUE = `You are a Senior Prompt Engineer. Look at the optimized prompt and find 3 specific weaknesses or areas for improvement.
 Return a JSON array of objects, each with a "weakness" and a "fix_suggestion".`;
 
-
-// Helper function to clean the response text
 const cleanResponse = (text: string | null | undefined): string => {
-    if (!text) {
-        return '';
-    }
+    if (!text) return '';
     return text.replace(/\*\*/g, '').trim();
 }
 
@@ -54,7 +43,7 @@ export const generatePrompt = async (
 ): Promise<string> => {
   try {
     const response = await ai.models.generateContent({
-        model: 'gemini-3-flash-preview',
+        model: 'gemini-3-pro-preview',
         contents: basePrompt,
         config: {
           systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
@@ -78,7 +67,7 @@ export const generatePromptStream = async (
 ): Promise<AsyncIterable<string>> => {
     try {
         const responseStream = await ai.models.generateContentStream({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3-pro-preview',
             contents: basePrompt,
             config: {
                 systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
@@ -106,7 +95,7 @@ export const generatePromptStream = async (
 export const auditPrompt = async (prompt: string): Promise<any> => {
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3-pro-preview',
             contents: `Audit this prompt:\n\n${prompt}`,
             config: {
                 systemInstruction: SYSTEM_INSTRUCTION_AUDIT,
@@ -132,7 +121,7 @@ export const auditPrompt = async (prompt: string): Promise<any> => {
 export const critiquePrompt = async (prompt: string): Promise<any[]> => {
     try {
         const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
+            model: 'gemini-3-pro-preview',
             contents: `Critique this prompt:\n\n${prompt}`,
             config: {
                 systemInstruction: SYSTEM_INSTRUCTION_CRITIQUE,
@@ -168,11 +157,7 @@ export const generateImage = async (prompt: string): Promise<string> => {
     });
 
     const base64ImageBytes: string | undefined = response.generatedImages?.[0]?.image?.imageBytes;
-
-    if (!base64ImageBytes) {
-      throw new Error("No image data received from the API.");
-    }
-    
+    if (!base64ImageBytes) throw new Error("No image data received from the API.");
     return `data:image/jpeg;base64,${base64ImageBytes}`;
   } catch (error) {
     console.error("Error generating image with Gemini:", error);

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { CommunityPrompt, User } from '../prompts/collection';
 
@@ -58,13 +59,14 @@ export const CommunityPromptCard: React.FC<CommunityPromptCardProps> = ({ prompt
                 <button 
                     onClick={(e) => handleActionClick(e, () => onLike(prompt.id))} 
                     className={`p-2 rounded-full transition-colors ${hasLiked ? 'bg-red-100 text-red-500 dark:bg-red-500/20' : 'bg-gray-200 dark:bg-gray-700/80 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
-                    title="Like"
+                    title={hasLiked ? "Remove your like" : "Like this creation"}
                 >
                     <HeartIcon filled={hasLiked} />
                 </button>
                  <button 
                     onClick={(e) => handleActionClick(e, () => onFork(prompt))} 
                     className="flex items-center gap-2 text-xs font-bold px-3 py-1.5 bg-indigo-600 text-white rounded-lg hover:bg-indigo-500 transition-colors"
+                    title="Fork this prompt to your own collection to edit and use"
                 >
                     <ForkIcon />
                     Fork

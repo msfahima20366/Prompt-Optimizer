@@ -1,202 +1,66 @@
+
 import React, { useState } from 'react';
 import { Prompt, LibraryPrompt } from '../prompts/collection';
-
-// --- ICONS ---
-const ForkIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2">
-        <path strokeLinecap="round" strokeLinejoin="round" d="M10 21V11m0 0V3a2 2 0 10-4 0v8m4 0a2 2 0 11-4 0m4 0h3m-3 7a2 2 0 104 0v-5a2 2 0 10-4 0v5z" />
-    </svg>
-);
-
-const CopyIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M8 16H6a2 2 0 01-2-2V6a2 2 0 012-2h8a2 2 0 012 2v2m-6 12h8a2 2 0 002-2v-8a2 2 0 00-2-2h-8a2 2 0 00-2 2v8a2 2 0 002 2z" />
-    </svg>
-);
-
-const CheckIcon: React.FC = () => (
-  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-  </svg>
-);
-
-const StarIcon: React.FC<{ isFavorite: boolean }> = ({ isFavorite }) => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-        <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" 
-        className={isFavorite ? 'text-yellow-400' : 'text-gray-300 dark:text-gray-600'}/>
-    </svg>
-);
-
-const RemoveIcon: React.FC = () => (
-    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
-        <path strokeLinecap="round" strokeLinejoin="round" d="M15 12H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
-    </svg>
-);
-// --- END ICONS ---
-
-const LLMIcon: React.FC<{ model: string }> = ({ model }) => {
-    const baseClass = "w-4 h-4 rounded-full";
-    switch (model) {
-        case 'Gemini': return <div className={`${baseClass} bg-gradient-to-br from-blue-400 to-purple-500`} title="Gemini"></div>;
-        case 'ChatGPT': return <div className={`${baseClass} bg-gradient-to-br from-green-400 to-teal-500`} title="ChatGPT"></div>;
-        case 'Claude': return <div className={`${baseClass} bg-gradient-to-br from-orange-400 to-yellow-500`} title="Claude"></div>;
-        case 'Midjourney': return <div className={`${baseClass} bg-gradient-to-br from-indigo-500 to-black`} title="Midjourney"></div>;
-        case 'Stable Diffusion': return <div className={`${baseClass} bg-gradient-to-br from-purple-600 to-pink-500`} title="Stable Diffusion"></div>;
-        case 'DALL-E': return <div className={`${baseClass} bg-gradient-to-br from-sky-400 to-cyan-300`} title="DALL-E"></div>;
-        case 'Imagen': return <div className={`${baseClass} bg-gradient-to-br from-rose-400 to-red-500`} title="Imagen"></div>;
-        case 'Sora': return <div className={`${baseClass} bg-gradient-to-br from-slate-600 to-slate-800`} title="Sora"></div>;
-        case 'Veo': return <div className={`${baseClass} bg-gradient-to-br from-emerald-400 to-green-600`} title="Veo"></div>;
-        case 'Llama': return <div className={`${baseClass} bg-gradient-to-br from-red-500 to-orange-500`} title="Llama"></div>;
-        case 'Grok': return <div className={`${baseClass} bg-gradient-to-br from-gray-700 to-blue-900`} title="Grok"></div>;
-        default: return <div className={`${baseClass} bg-gray-400`} title={model}></div>;
-    }
-};
 
 interface PromptCardProps {
     prompt: Prompt | LibraryPrompt;
     onView?: () => void;
     onToggleFavorite?: () => void;
-    onForkPrompt?: () => void;
-    onRemoveFromProject?: () => void;
-    searchQuery?: string;
-    versionCount?: number;
-    selectMode?: boolean;
-    isSelected?: boolean;
-    onSelect?: () => void;
 }
 
-const highlightMatch = (text: string, query?: string) => {
-    if (!query || query.trim() === '') return text;
-    const escapedQuery = query.replace(/[-\/\\^$*+?.()|[\]{}]/g, '\\$&');
-    const regex = new RegExp(`(${escapedQuery})`, 'gi');
-    
-    return <span>{text.split(regex).map((part, index) => 
-        regex.test(part) 
-            ? <mark key={index} className="bg-amber-300 dark:bg-amber-500/50 rounded px-0.5 py-0">{part}</mark> 
-            : <span key={index}>{part}</span>
-    )}</span>;
-};
+export const PromptCard: React.FC<PromptCardProps> = ({ prompt, onView, onToggleFavorite }) => {
+    const isLib = 'goal' in prompt;
+    const [copied, setCopied] = useState(false);
 
-
-export const PromptCard: React.FC<PromptCardProps> = ({ 
-    prompt, 
-    onView, 
-    onToggleFavorite, 
-    onForkPrompt, 
-    onRemoveFromProject, 
-    searchQuery, 
-    versionCount,
-    selectMode = false,
-    isSelected = false,
-    onSelect
-}) => {
-    const isLibraryPrompt = 'goal' in prompt;
-    const userPrompt = isLibraryPrompt ? null : prompt;
-    
-    const [isCopied, setIsCopied] = useState(false);
-
-    const isNew = 'createdAt' in prompt && prompt.createdAt && (Date.now() - prompt.createdAt) < 7 * 24 * 60 * 60 * 1000; // 7 days
-    const isTrending = isLibraryPrompt && prompt.views > 2000 && prompt.shares > 400;
-
-    const handleActionClick = (e: React.MouseEvent, action?: () => void) => {
-        e.stopPropagation();
-        action?.();
-    };
-
-    const handleCopy = (e: React.MouseEvent) => {
+    const copy = (e: React.MouseEvent) => {
         e.stopPropagation();
         navigator.clipboard.writeText(prompt.prompt);
-        setIsCopied(true);
-        setTimeout(() => setIsCopied(false), 2000);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
     };
 
-    const handleCardClick = () => {
-        if (selectMode) {
-            onSelect?.();
-        } else {
-            onView?.();
-        }
-    };
-
-    const buttonClasses = "p-1.5 bg-gray-100 dark:bg-gray-800/80 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition-colors";
-    const selectedClasses = isSelected ? 'border-indigo-500 ring-2 ring-indigo-500/50' : 'border-gray-200 dark:border-gray-700/60 hover:border-amber-500/50';
+    const isFav = !isLib && (prompt as Prompt).isFavorite;
 
     return (
-      <div
-          onClick={handleCardClick}
-          className={`relative group w-full flex flex-col bg-white/50 dark:bg-gray-900/50 rounded-2xl border-2 ${selectedClasses} shadow-lg hover:shadow-yellow-500/20 transition-all duration-300 ease-in-out transform hover:-translate-y-1.5 cursor-pointer overflow-hidden`}
-      >
-        {selectMode && (
-             <div className="absolute top-4 left-4 z-20">
-                <input
-                    type="checkbox"
-                    checked={isSelected}
-                    onChange={e => e.stopPropagation()} 
-                    className="h-5 w-5 rounded border-gray-400 text-indigo-600 focus:ring-indigo-500 bg-white/50 dark:bg-gray-800"
-                />
-            </div>
-        )}
-
-        {userPrompt?.type === 'image' && userPrompt.imageUrl && (
-          <div className="aspect-video bg-gray-200 dark:bg-gray-800">
-            <img src={userPrompt.imageUrl} alt={userPrompt.title} className="w-full h-full object-cover" />
-          </div>
-        )}
-
-        <div className="absolute top-4 right-4 flex items-center gap-2 z-10">
-            {onRemoveFromProject ? (
-                <button onClick={(e) => handleActionClick(e, onRemoveFromProject)} className="p-1.5 bg-gray-100 text-red-500 dark:bg-gray-800/80 dark:text-red-400 rounded-full hover:bg-red-500/20 dark:hover:bg-red-500/30 transition-colors" title="Remove from Project">
-                    <RemoveIcon />
-                </button>
-            ) : isLibraryPrompt ? (
-                <div className="flex items-center gap-2">
-                    <button onClick={handleCopy} className={buttonClasses} title="Copy Prompt">
-                        {isCopied ? <CheckIcon /> : <CopyIcon />}
-                    </button>
-                    <button onClick={(e) => handleActionClick(e, onForkPrompt)} className={buttonClasses} title="Fork to Collection">
-                        <ForkIcon />
-                    </button>
-                </div>
-            ) : (
-                !selectMode && <button onClick={(e) => handleActionClick(e, onToggleFavorite)} className={buttonClasses} title="Toggle Favorite">
-                    <StarIcon isFavorite={!!userPrompt?.isFavorite} />
-                </button>
-            )}
-        </div>
-        
-        <div className="flex-1 flex flex-col justify-between p-5">
-            <div className="flex-1 space-y-3">
-                <h3 className="font-bold text-gray-900 dark:text-gray-100 text-lg pr-12">
-                    {highlightMatch(prompt.title, searchQuery)}
-                </h3>
-                 {(isNew || isTrending) && (
-                    <div className="flex items-center gap-2">
-                        {isNew && <span className="text-xs font-bold text-white bg-blue-500 px-2 py-0.5 rounded-full">✨ New</span>}
-                        {isTrending && <span className="text-xs font-bold text-white bg-red-500 px-2 py-0.5 rounded-full">🔥 Trending</span>}
-                    </div>
-                )}
-                <p className="text-gray-600 dark:text-gray-400 text-sm font-medium text-left line-clamp-4">
-                    {highlightMatch(prompt.prompt, searchQuery)}
-                </p>
-            </div>
+        <div 
+            onClick={onView}
+            className="group relative flex flex-col justify-between p-8 bg-white dark:bg-stone-900/50 border border-amber-100 dark:border-stone-800 rounded-[2.5rem] shadow-xl hover:shadow-2xl hover:shadow-amber-500/10 transition-all duration-500 cursor-pointer overflow-hidden transform hover:-translate-y-2"
+        >
+            <div className="absolute top-0 right-0 w-24 h-24 bg-gradient-to-br from-amber-500/10 to-transparent blur-2xl group-hover:from-amber-500/20"></div>
             
-            <div className="mt-4 flex items-center justify-between pt-2 border-t border-gray-200 dark:border-gray-700/50">
-                <div className="flex items-center gap-2 text-xs text-gray-500 font-semibold">
-                    {isLibraryPrompt && prompt.llmModels.map(model => <LLMIcon key={model} model={model} />)}
-                    {!isLibraryPrompt && (
-                        <div className="flex items-center gap-2">
-                            <span className="text-amber-600 dark:text-amber-400">In Your Collection</span>
-                            {versionCount && versionCount > 1 && (
-                                <span className="text-xs font-bold text-gray-500 bg-gray-200 dark:bg-gray-700 px-2 py-0.5 rounded-full">v{versionCount}</span>
-                            )}
-                        </div>
+            <div className="space-y-4">
+                <div className="flex justify-between items-start">
+                    <div className="space-y-1">
+                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-orange-600 opacity-70">{isLib ? 'Library Trace' : 'User Entry'}</span>
+                        <h3 className="text-xl font-black tracking-tighter text-brand-navy dark:text-white line-clamp-1 uppercase ">{prompt.title}</h3>
+                    </div>
+                    {!isLib && onToggleFavorite && (
+                        <button 
+                            onClick={(e) => { e.stopPropagation(); onToggleFavorite(); }} 
+                            title={isFav ? "Remove from favorites" : "Add to your personal favorites"}
+                            className={`p-2 rounded-full transition-colors ${ isFav ? 'text-orange-500' : 'text-stone-300 dark:text-stone-700 hover:text-orange-400'}`}
+                        >
+                            <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20"><path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z"/></svg>
+                        </button>
                     )}
                 </div>
-                 <button onClick={(e) => handleActionClick(e, onView)} className="text-xs font-bold px-3 py-1.5 bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-200 rounded-lg hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
-                    View
+                <p className="text-sm font-medium text-stone-500 dark:text-slate-400 leading-relaxed line-clamp-4">
+                    "{prompt.prompt}"
+                </p>
+            </div>
+
+            <div className="mt-8 pt-6 flex justify-between items-center border-t border-amber-50 dark:border-stone-800">
+                <button 
+                  onClick={copy} 
+                  title="Copy the prompt content to clipboard"
+                  className={`flex items-center gap-2 px-6 py-2 text-[10px] font-black uppercase tracking-widest rounded-xl transition-all ${copied ? 'bg-emerald-500 text-white' : 'bg-amber-50 dark:bg-stone-800 text-orange-700 dark:text-amber-400 hover:bg-amber-500 hover:text-white shadow-sm'}`}
+                >
+                    {copied ? 'Copied' : 'Copy Trace'}
                 </button>
+                <span className="text-[10px] font-black text-stone-400 dark:text-stone-600 uppercase tracking-widest">
+                    {isLib ? (prompt as LibraryPrompt).technique : (prompt as Prompt).category || 'Unset'}
+                </span>
             </div>
         </div>
-      </div>
     );
 };

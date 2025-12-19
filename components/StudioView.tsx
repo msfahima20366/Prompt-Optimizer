@@ -1,9 +1,7 @@
 
-
 import React, { useState, useEffect } from 'react';
 import { ARTISTS, COMPOSITION, DETAILS, IMAGE_STYLES, LIGHTING, ADJECTIVES, VERBS, NOUNS } from '../prompts/imagePrompts';
 
-// --- ICONS ---
 const CopyIcon: React.FC = () => (
     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 012-2h2a2 2 0 012 2v2a2 2 0 01-2 2h-2a2 2 0 01-2-2V5z" /></svg>
 );
@@ -18,8 +16,6 @@ const SaveIcon: React.FC = () => (
 const LoadingSpinner: React.FC = () => (
     <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-white"></div>
 );
-// --- END ICONS ---
-
 
 interface PromptBuilderViewProps {
     onGenerateImage: (prompt: string) => void;
@@ -29,23 +25,22 @@ interface PromptBuilderViewProps {
     onSavePrompt: (prompt: string) => void;
 }
 
-const Section: React.FC<{ title: string; children: React.ReactNode }> = ({ title, children }) => (
-    <div className="space-y-3 bg-gray-100/50 dark:bg-gray-800/40 p-4 rounded-lg border border-gray-200 dark:border-gray-700/50">
-        <h3 className="font-semibold text-gray-800 dark:text-gray-200">{title}</h3>
+const Section: React.FC<{ title: string; children: React.ReactNode, tooltip?: string }> = ({ title, children, tooltip }) => (
+    <div className="space-y-4 bg-amber-50/20 dark:bg-stone-900/30 p-6 rounded-[2rem] border border-amber-100/50 dark:border-stone-800" title={tooltip}>
+        <h3 className="text-sm font-black uppercase tracking-widest text-orange-600 dark:text-amber-500 ">{title}</h3>
         {children}
     </div>
 );
 
-// FIX: Added 'label' to the props interface and rendered it.
-const MultiSelect: React.FC<{ label: string; options: string[], selected: string[], toggle: (option: string) => void }> = ({ label, options, selected, toggle }) => (
-    <div>
-        <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">{label}</label>
+const MultiSelect: React.FC<{ label: string; options: string[], selected: string[], toggle: (option: string) => void, tooltip?: string }> = ({ label, options, selected, toggle, tooltip }) => (
+    <div title={tooltip}>
+        <label className="block text-[10px] font-black text-stone-400 uppercase tracking-widest mb-3">{label}</label>
         <div className="flex flex-wrap gap-2">
             {options.map(option => (
                 <button
                     key={option}
                     onClick={() => toggle(option)}
-                    className={`px-3 py-1.5 text-xs font-semibold rounded-full border-2 transition-colors ${selected.includes(option) ? 'bg-amber-500 text-white border-amber-500' : 'bg-transparent text-gray-700 dark:text-gray-300 border-gray-300 dark:border-gray-600 hover:border-amber-500'}`}
+                    className={`px-4 py-2 text-[10px] font-black uppercase tracking-tighter rounded-xl border-2 transition-all duration-300 ${selected.includes(option) ? 'bg-amber-500 text-white border-amber-500 shadow-lg shadow-amber-500/20' : 'bg-transparent text-stone-600 dark:text-stone-400 border-stone-100 dark:border-stone-800 hover:border-amber-400'}`}
                 >
                     {option}
                 </button>
@@ -97,70 +92,83 @@ export const PromptBuilderView: React.FC<PromptBuilderViewProps> = ({ onGenerate
     };
 
     return (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <div className="space-y-4 max-h-[75vh] lg:max-h-[70vh] overflow-y-auto pr-2">
-                <Section title="Subject">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+            <div className="space-y-6 max-h-[75vh] lg:max-h-[70vh] overflow-y-auto pr-4 custom-scrollbar">
+                <Section title="Neural Subject" tooltip="Define the central entity or action of your image">
                     <textarea
                         value={subject}
                         onChange={e => setSubject(e.target.value)}
-                        placeholder="e.g., A majestic lion in a futuristic city"
-                        className="w-full h-24 bg-white dark:bg-gray-800/80 border-2 border-gray-300 dark:border-gray-700 rounded-lg p-3 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        placeholder="Define the primary visual anchor..."
+                        className="w-full h-24 bg-white dark:bg-stone-900 border border-amber-100 dark:border-stone-800 rounded-2xl p-4 text-brand-navy dark:text-white font-bold focus:outline-none focus:ring-2 focus:ring-amber-500 transition-all placeholder-amber-100 dark:placeholder-stone-800"
                     />
                 </Section>
-                <Section title="Modifiers">
+                <Section title="Logic Modifiers" tooltip="Refine the behavior and setting of your subject">
                     <MultiSelect label="Adjectives" options={ADJECTIVES} selected={adjectives} toggle={toggleFactory(setAdjectives)} />
                     <MultiSelect label="Verbs" options={VERBS} selected={verbs} toggle={toggleFactory(setVerbs)} />
                     <MultiSelect label="Nouns" options={NOUNS} selected={nouns} toggle={toggleFactory(setNouns)} />
                 </Section>
-                <Section title="Style & Artist">
+                <Section title="Aesthetic Engine" tooltip="Control the art style and artistic influence">
                     <MultiSelect label="Visual Style" options={IMAGE_STYLES} selected={styles} toggle={toggleFactory(setStyles)} />
                     <MultiSelect label="Artist Influence" options={ARTISTS} selected={artists} toggle={toggleFactory(setArtists)} />
                 </Section>
-                <Section title="Lighting & Composition">
+                <Section title="Optical Composition" tooltip="Adjust lighting, camera lenses, and framing">
                     <MultiSelect label="Lighting" options={LIGHTING} selected={lighting} toggle={toggleFactory(setLighting)} />
-                    <MultiSelect label="Composition" options={COMPOSITION} selected={composition} toggle={toggleFactory(setComposition)} />
+                    <MultiSelect label="Camera Lens / Angle" options={COMPOSITION} selected={composition} toggle={toggleFactory(setComposition)} />
                 </Section>
-                <Section title="Details & Customization">
+                <Section title="Synthesized Details" tooltip="Set the final render quality and technical tags">
                     <MultiSelect label="Quality & Render" options={DETAILS} selected={details} toggle={toggleFactory(setDetails)} />
                      <input
                         type="text"
                         value={custom}
                         onChange={e => setCustom(e.target.value)}
-                        placeholder="Add your own custom tags, comma separated"
-                        className="w-full bg-white dark:bg-gray-800/80 border-2 border-gray-300 dark:border-gray-700 rounded-lg px-3 py-2 text-sm text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-amber-500"
+                        placeholder="APPEND CUSTOM MATRIX TAGS (COMMA SEPARATED)"
+                        className="w-full bg-white dark:bg-stone-900 border border-amber-100 dark:border-stone-800 rounded-2xl px-4 py-3 text-[10px] font-black uppercase tracking-widest text-brand-navy dark:text-white focus:outline-none focus:ring-2 focus:ring-amber-500"
                     />
                 </Section>
             </div>
 
-            <div className="space-y-4">
-                <h3 className="font-bold gradient-text">Final Prompt & Image</h3>
-                <div className="relative">
+            <div className="space-y-8">
+                <h3 className="text-xl font-black tracking-tighter uppercase text-orange-600 dark:text-amber-500">Synthesized Inference</h3>
+                <div className="relative group">
                     <textarea
                         readOnly
                         value={finalPrompt}
-                        className="w-full h-32 bg-white dark:bg-gray-900/50 border-2 border-gray-300 dark:border-gray-700 rounded-lg shadow-inner p-3 text-sm text-gray-900 dark:text-gray-300 resize-none"
+                        className="w-full h-40 bg-white/50 dark:bg-stone-900/50 border border-amber-100 dark:border-stone-800 rounded-[2rem] shadow-inner p-6 text-sm text-stone-800 dark:text-stone-300 font-medium  leading-relaxed resize-none transition-all focus:ring-0"
                     />
-                     <div className="absolute top-3 right-3 flex flex-col gap-2">
-                        <button onClick={handleCopy} className="p-2 bg-gray-200 dark:bg-gray-700/80 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" title="Copy Prompt">
+                     <div className="absolute top-4 right-4 flex flex-col gap-3">
+                        <button onClick={handleCopy} className="p-3 bg-white dark:bg-stone-800 text-orange-600 dark:text-amber-500 rounded-2xl shadow-xl hover:scale-110 transition-all border border-amber-100 dark:border-stone-700" title="Copy the assembled image prompt">
                             {isCopied ? <CheckIcon /> : <CopyIcon />}
                         </button>
-                        <button onClick={() => onSavePrompt(finalPrompt)} className="p-2 bg-gray-200 dark:bg-gray-700/80 rounded-full hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors" title="Save Prompt">
+                        <button onClick={() => onSavePrompt(finalPrompt)} className="p-3 bg-white dark:bg-stone-800 text-orange-600 dark:text-amber-500 rounded-2xl shadow-xl hover:scale-110 transition-all border border-amber-100 dark:border-stone-700" title="Save this image prompt to collection">
                             <SaveIcon />
                         </button>
                     </div>
                 </div>
+                
                 <button 
                     onClick={() => onGenerateImage(finalPrompt)}
                     disabled={isGenerating || !finalPrompt}
-                    className="w-full h-14 flex items-center justify-center gap-3 text-lg bg-gradient-to-r from-amber-500 to-yellow-400 text-white font-bold rounded-lg hover:opacity-90 transition-opacity disabled:opacity-50 disabled:cursor-wait"
+                    title="Transmit this prompt to the Imagen-4 neural core for image synthesis"
+                    className="w-full h-20 flex items-center justify-center gap-4 text-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-black uppercase tracking-[0.2em] rounded-[2rem] hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:cursor-wait shadow-2xl shadow-amber-500/30 border-b-8 border-orange-800"
                 >
-                    {isGenerating ? <LoadingSpinner /> : '🍌 Generate Image 🍌'}
+                    {isGenerating ? <div className="animate-spin rounded-full h-8 w-8 border-b-4 border-white"></div> : 'INITIALIZE GENERATION'}
                 </button>
-                <div className="w-full aspect-square bg-gray-100 dark:bg-gray-800/50 rounded-lg flex items-center justify-center border-2 border-dashed border-gray-300 dark:border-gray-700 overflow-hidden">
-                    {isGenerating && <p className="text-gray-500 dark:text-gray-400 animate-pulse">Generating your masterpiece...</p>}
-                    {error && !isGenerating && <p className="text-red-500 text-center p-4">{error}</p>}
-                    {generatedImage && !isGenerating && <img src={generatedImage} alt="Generated prompt" className="w-full h-full object-contain" />}
-                    {!generatedImage && !isGenerating && !error && <p className="text-gray-500 dark:text-gray-400">Your image will appear here</p>}
+
+                <div className="w-full aspect-square bg-amber-50/30 dark:bg-stone-900/30 rounded-[3rem] flex items-center justify-center border-4 border-dashed border-amber-100 dark:border-stone-800 overflow-hidden relative shadow-2xl">
+                    {isGenerating && (
+                        <div className="flex flex-col items-center gap-4">
+                            <div className="w-16 h-16 border-4 border-amber-500 border-t-transparent rounded-full animate-spin"></div>
+                            <p className="text-[10px] font-black uppercase tracking-widest text-orange-600 animate-pulse">Rendering Neural Data...</p>
+                        </div>
+                    )}
+                    {error && !isGenerating && <p className="text-red-500 font-bold uppercase text-xs tracking-widest text-center p-8">{error}</p>}
+                    {generatedImage && !isGenerating && <img src={generatedImage} alt="Generated prompt" className="w-full h-full object-cover animate-fade-in" />}
+                    {!generatedImage && !isGenerating && !error && (
+                        <div className="text-center space-y-4 opacity-20">
+                            <div className="text-6xl ">🖼️</div>
+                            <p className="text-[10px] font-black uppercase tracking-[0.5em] text-stone-400">Observatory Standby</p>
+                        </div>
+                    )}
                 </div>
             </div>
         </div>
