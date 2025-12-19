@@ -174,10 +174,45 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSa
                     </div>
                 </div>
 
-                {/* 4. Logic Blueprints - Expanded */}
+                {/* 4. Knowledge Context */}
+                <div className="modern-card p-6 space-y-5 border border-indigo-500/10">
+                    <div className="flex justify-between items-center">
+                        <div className="flex flex-col gap-1">
+                            <h3 className="font-bold text-gray-800 dark:text-gray-100">4. Knowledge Context</h3>
+                            <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Inject Saved Background</p>
+                        </div>
+                        <button 
+                            onClick={onSaveNewContext}
+                            className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all"
+                            title="Add New Context"
+                        >
+                            +
+                        </button>
+                    </div>
+                    <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                        {userContexts.length === 0 ? (
+                            <p className="text-[10px] text-gray-400 font-medium italic p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">No contexts saved. Click "+" to add background info like Brand Voice or Project Goals.</p>
+                        ) : (
+                            userContexts.map(context => (
+                                <button 
+                                    key={context.id}
+                                    onClick={() => toggleContext(context.id)}
+                                    className={`text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 flex items-center justify-between ${selectedContexts.has(context.id) ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-transparent hover:border-gray-200'}`}
+                                >
+                                    <span className="truncate pr-2">{context.title}</span>
+                                    {selectedContexts.has(context.id) && (
+                                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                    )}
+                                </button>
+                            ))
+                        )}
+                    </div>
+                </div>
+
+                {/* 5. Logic Blueprints - Expanded */}
                 <div className="modern-card p-6 space-y-5">
                     <div className="flex flex-col gap-1">
-                        <h3 className="font-bold text-gray-800 dark:text-gray-100">4. Logic Blueprints</h3>
+                        <h3 className="font-bold text-gray-800 dark:text-gray-100">5. Logic Blueprints</h3>
                         <p className="text-[10px] text-gray-500 font-medium uppercase tracking-widest">Structural Modifiers</p>
                     </div>
                     <div className="grid grid-cols-1 gap-3 max-h-[500px] overflow-y-auto custom-scrollbar pr-2">
