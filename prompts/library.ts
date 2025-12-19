@@ -51,10 +51,10 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tokens: 70,
     temperature: 0.8,
     tags: ['#blogging', '#seo', '#ideation'],
-    views: 5000, // High views for trending
-    shares: 800,
+    views: 8500, // Top Trending
+    shares: 1200,
     type: 'text',
-    createdAt: now - 30 * day, // Older
+    createdAt: now - 15 * day,
   },
   {
     id: 'lib-cw-2',
@@ -70,7 +70,7 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     views: 1200,
     shares: 120,
     type: 'text',
-    createdAt: now - 1 * day, // Very recent
+    createdAt: now - 0.5 * day, // Newest
   },
   {
     id: 'lib-img-3',
@@ -83,12 +83,29 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tokens: 100,
     temperature: 1.0,
     tags: ['#art', '#surreal', '#digital'],
-    views: 10000, // Top trending
-    shares: 2500,
+    views: 15000, // Trending leader
+    shares: 3200,
     type: 'image',
     createdAt: now - 5 * day,
   },
-  ...Array.from({ length: 40 }).map((_, i): LibraryPrompt => ({
+  {
+      id: 'lib-strat-4',
+      title: 'A-Z Strategic Growth Plan',
+      prompt: 'Develop a comprehensive strategic growth plan for a [business type]. Focus on market penetration and product development phases.',
+      goal: 'Strategic business planning.',
+      category: 'Strategy',
+      // Fix: 'GPT-4' and 'Claude-3' are not valid members of the LLMModel union type. Using 'ChatGPT' and 'Claude'.
+      llmModels: ['ChatGPT', 'Claude'],
+      technique: 'Chain-of-Thought (CoT)',
+      tokens: 250,
+      temperature: 0.7,
+      tags: ['#business', '#growth'],
+      views: 300,
+      shares: 15,
+      type: 'text',
+      createdAt: now - 45 * day,
+  },
+  ...Array.from({ length: 36 }).map((_, i): LibraryPrompt => ({
     id: `lib-bulk-${i}`,
     title: `Expert ${LIBRARY_CATEGORIES[i % LIBRARY_CATEGORIES.length]} Assistant #${i + 1}`,
     prompt: `Analyze the following scenario as a specialist in ${LIBRARY_CATEGORIES[i % LIBRARY_CATEGORIES.length]}. Focus on core metrics and long-term sustainability.`,
@@ -99,9 +116,9 @@ export const LIBRARY_PROMPTS: LibraryPrompt[] = [
     tokens: 100,
     temperature: 0.7,
     tags: ['#helper', '#pro'],
-    views: Math.floor(Math.random() * 2000),
-    shares: Math.floor(Math.random() * 500),
+    views: Math.floor(Math.random() * 5000),
+    shares: Math.floor(Math.random() * 1000),
     type: (i % 3 === 0 ? 'image' : i % 3 === 1 ? 'video' : 'text') as PromptType,
-    createdAt: now - (i * 2 * day),
+    createdAt: now - (i * 1.5 * day),
   }))
 ];

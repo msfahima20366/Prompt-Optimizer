@@ -86,7 +86,7 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
     }
   }, [libraryTypeFilter]);
 
-  // Logic for LIBRARY PROMPTS Sorting
+  // Logic for LIBRARY PROMPTS Filtering and Sorting
   const filteredLibraryPrompts = useMemo(() => {
     let prompts = LIBRARY_PROMPTS.filter(p => {
         if (llmFilter.length > 0 && !p.llmModels.some(model => llmFilter.includes(model))) return false;
@@ -101,21 +101,21 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
         return true;
     });
 
-    // CRITICAL FIX: Use [...prompts] to create a new array before sorting to trigger React updates
-    const sorted = [...prompts];
-    switch (librarySort) {
-        case 'newest':
-            return sorted.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
-        case 'az':
-            return sorted.sort((a, b) => a.title.localeCompare(b.title));
-        case 'trending':
-        default:
-            return sorted.sort((a, b) => {
-                const scoreA = (a.views || 0) + (a.shares || 0) * 5;
-                const scoreB = (b.views || 0) + (b.shares || 0) * 5;
-                return scoreB - scoreA;
-            });
+    // CLONE ARRAY TO TRIGGER REACT UPDATE
+    const items = [...prompts];
+    
+    if (librarySort === 'az') {
+        items.sort((a, b) => a.title.localeCompare(b.title));
+    } else if (librarySort === 'newest') {
+        items.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+    } else if (librarySort === 'trending') {
+        items.sort((a, b) => {
+            const scoreA = (a.views || 0) + (a.shares || 0) * 10;
+            const scoreB = (b.views || 0) + (b.shares || 0) * 10;
+            return scoreB - scoreA;
+        });
     }
+    return items;
   }, [searchQuery, llmFilter, techniqueFilter, categoryFilter, libraryTypeFilter, librarySort]);
 
   // Logic for USER COLLECTION Sorting
@@ -128,19 +128,19 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
         return true;
     });
 
-    const sorted = [...prompts];
-    switch (userSort) {
-        case 'az': return sorted.sort((a, b) => a.title.localeCompare(b.title));
-        case 'trending': return sorted.sort((a,b) => b.createdAt - a.createdAt); // Trending for user = recently active
-        case 'newest':
-        default: return sorted.sort((a,b) => b.createdAt - a.createdAt);
+    const items = [...prompts];
+    if (userSort === 'az') {
+        items.sort((a, b) => a.title.localeCompare(b.title));
+    } else {
+        items.sort((a, b) => b.createdAt - a.createdAt);
     }
+    return items;
   }, [latestUserPrompts, userCollection, searchQuery, collectionFilter, userCollectionTypeFilter, userSort]);
 
   const SortButton: React.FC<{ label: string; value: SortOption; active: SortOption; onClick: (v: SortOption) => void; }> = ({ label, value, active, onClick }) => (
     <button
       onClick={() => onClick(value)}
-      className={`px-3 py-1.5 text-[10px] font-bold rounded-full transition-all border ${active === value ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-transparent hover:bg-gray-200'}`}
+      className={`px-4 py-1.5 text-[11px] font-bold rounded-full transition-all border-2 ${active === value ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-100 dark:border-gray-700 hover:border-indigo-400 hover:text-indigo-500'}`}
     >
       {label}
     </button>
@@ -157,61 +157,68 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Search prompts..."
-                  className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  className="w-full bg-white dark:bg-gray-900 border-2 border-gray-100 dark:border-gray-800 rounded-2xl pl-10 pr-4 py-4 focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all shadow-sm"
               />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
-              <FilterDropdown label="Type" options={PROMPT_TYPE_OPTIONS} selectedValue={libraryTypeFilter} onValueChange={setLibraryTypeFilter} />
-              <MultiSelectDropdown label="Model" options={availableLlmModels} selectedValues={llmFilter} onValueChange={setLlmFilter as (v: string[]) => void} />
-              <MultiSelectDropdown label="Technique" options={PROMPT_TECHNIQUES} selectedValues={techniqueFilter} onValueChange={setTechniqueFilter as (v: string[]) => void} />
-              <MultiSelectDropdown label="Category" options={LIBRARY_CATEGORIES} selectedValues={categoryFilter} onValueChange={setCategoryFilter} />
+              <FilterDropdown label="Type Filter" options={PROMPT_TYPE_OPTIONS} selectedValue={libraryTypeFilter} onValueChange={setLibraryTypeFilter} />
+              <MultiSelectDropdown label="AI Architecture" options={availableLlmModels} selectedValues={llmFilter} onValueChange={setLlmFilter as (v: string[]) => void} />
+              <MultiSelectDropdown label="Techniques" options={PROMPT_TECHNIQUES} selectedValues={techniqueFilter} onValueChange={setTechniqueFilter as (v: string[]) => void} />
+              <MultiSelectDropdown label="Industry Categories" options={LIBRARY_CATEGORIES} selectedValues={categoryFilter} onValueChange={setCategoryFilter} />
           </div>
         </div>
       )}
       
       <div className="space-y-12">
-        {collectionFilter === 'all' && filteredLibraryPrompts.length > 0 && (
-          <section className="space-y-4">
-             <div className="flex justify-between items-end border-b border-gray-100 dark:border-gray-800 pb-2">
+        {collectionFilter === 'all' && (
+          <section className="space-y-6">
+             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
                 <div>
-                    <h2 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Prompt Library</h2>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Public Templates</p>
+                    <h2 className="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Prompt Library</h2>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest mt-1">Global Community Templates</p>
                 </div>
-                <div className="flex items-center gap-2 mb-1">
+                <div className="flex items-center gap-2 p-1 bg-gray-50 dark:bg-gray-900 rounded-full border border-gray-100 dark:border-gray-800">
                     <SortButton label="Trending" value="trending" active={librarySort} onClick={setLibrarySort} />
                     <SortButton label="Newest" value="newest" active={librarySort} onClick={setLibrarySort} />
                     <SortButton label="A-Z" value="az" active={librarySort} onClick={setLibrarySort} />
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredLibraryPrompts.map(prompt => (
-                <PromptCard key={prompt.id} prompt={prompt} onView={() => onViewPrompt(prompt)} />
-              ))}
-            </div>
+            
+            {filteredLibraryPrompts.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredLibraryPrompts.map(prompt => (
+                        <PromptCard key={prompt.id} prompt={prompt} onView={() => onViewPrompt(prompt)} />
+                    ))}
+                </div>
+            ) : (
+                <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/30 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                    <p className="text-gray-400 font-medium">No templates found. Adjust filters to broaden search.</p>
+                </div>
+            )}
           </section>
         )}
 
-        <section className="space-y-4">
-            <div className="flex justify-between items-end border-b border-gray-100 dark:border-gray-800 pb-2">
+        <section className="space-y-6">
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4 border-b border-gray-100 dark:border-gray-800 pb-4">
                 <div>
-                    <h2 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">
-                        {collectionFilter === 'favorites' ? 'My Favorites' : 'My Collection'}
+                    <h2 className="text-2xl font-black text-gray-800 dark:text-white uppercase tracking-tight">
+                        {collectionFilter === 'favorites' ? 'Favorite Library' : 'My Personal Vault'}
                     </h2>
-                    <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest">Your Private Vault</p>
+                    <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest mt-1">Secure Private Collection</p>
                 </div>
-                <div className="flex items-center gap-2 mb-1">
-                    <button onClick={() => setSelectMode(!selectMode)} className={`px-3 py-1.5 text-[10px] font-bold rounded-full border transition-all ${selectMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-transparent hover:bg-gray-200'}`}>
-                        {selectMode ? 'Cancel Selection' : 'Select Multiple'}
+                <div className="flex items-center gap-2">
+                    <button onClick={() => setSelectMode(!selectMode)} className={`px-4 py-1.5 text-[11px] font-bold rounded-full border-2 transition-all ${selectMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-white dark:bg-gray-800 text-gray-500 border-gray-100 dark:border-gray-700 hover:border-indigo-400'}`}>
+                        {selectMode ? 'Exit Selection' : 'Batch Manage'}
                     </button>
-                    <div className="h-4 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
-                    <SortButton label="Newest" value="newest" active={userSort} onClick={setUserSort} />
-                    <SortButton label="A-Z" value="az" active={userSort} onClick={setUserSort} />
+                    <div className="h-4 w-px bg-gray-200 dark:bg-gray-700 mx-2"></div>
+                    <SortButton label="Recent" value="newest" active={userSort} onClick={setUserSort} />
+                    <SortButton label="Alphabetical" value="az" active={userSort} onClick={setUserSort} />
                 </div>
             </div>
             
             {filteredUserCollection.length === 0 ? (
                 <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/30 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
-                    <p className="text-gray-400 font-medium">No saved prompts found here.</p>
+                    <p className="text-gray-400 font-medium">Your private collection is currently empty.</p>
                 </div>
             ) : (
                 <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
@@ -223,7 +230,7 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
                                         type="checkbox" 
                                         checked={selectedIds.has(prompt.id)} 
                                         onChange={() => onToggleSelect(prompt.id)}
-                                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                        className="w-5 h-5 rounded-lg border-2 border-gray-300 text-indigo-600 focus:ring-indigo-500 transition-all cursor-pointer"
                                     />
                                 </div>
                             )}

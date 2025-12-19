@@ -5,24 +5,37 @@ const SYSTEM_INSTRUCTION_GENERATOR = `You are a helpful and creative AI assistan
 Adhere to any specific constraints or formats mentioned in the prompt.
 The output should be clean text, without any markdown formatting like bolding (**).`;
 
-export const SYSTEM_INSTRUCTION_META_PROMPT = `You are a world-class AI prompt engineering expert. Your task is to take a user's composed draft and transform it into a single, cohesive, powerful, and detailed 'meta-prompt'.
-This final prompt should be structured to instruct another AI (the specified TARGET LLM MODEL) to generate the desired content with extreme clarity and precision.
+export const getMetaPromptInstruction = (strategy: string) => {
+    const strategies: Record<string, string> = {
+        'meta': `Act as a world-class prompt engineer. Your goal is to transform the user's draft into a high-dimensional 'Meta-Prompt'. 
+        Structure the output using clear hierarchical blocks such as [CONTEXT], [OBJECTIVE], [CONSTRAINTS], and [REASONING]. 
+        This prompt should be optimized for complex reasoning and multi-step tasks.`,
+        
+        'refined': `Act as a professional editor and logic specialist. Your goal is to polish the user's draft into a single, cohesive, and perfectly articulated instruction. 
+        DO NOT use complex Meta-Prompt headers or sections. Simply return a high-quality, professional, and clear version of the original intent that is ready to be used directly.`,
+        
+        'concise': `Act as a token-efficiency expert. Your goal is to strip the user's draft down to its absolute core logic. 
+        Eliminate all conversational filler, adjectives, and metadata. Return a hyper-direct, punchy instruction that consumes the minimum number of tokens while retaining 100% of the original intent.`,
+        
+        'technical': `Act as a system architect. Your goal is to format the user's request as a formal technical specification or a programming-style requirement document. 
+        Use structured lists, if-then logic, and clearly defined parameters. This is intended for high-precision logic tasks or code generation.`
+    };
 
-ENGINEERING REQUIREMENTS:
-1. CORE LOGIC INTEGRATION: Deeply weave the requested 'Applied Logic Patterns' into the structural skeleton of the prompt.
-   - If 'Expert Role' is active, start with a detailed role definition.
-   - If 'Show Examples' is active, include labeled placeholder sections for user-provided examples.
-   - If 'Organized Structure' is active, use <tags> to compartmentalize instructions, context, and constraints.
-   - If 'Do Not List' is active, create a dedicated 'DO NOT' section with high-priority prohibitions.
-   - If 'Thinking Steps' is active, mandate an internal chain-of-thought process.
-2. MODEL OPTIMIZATION: Calibrate the technical syntax for the specified TARGET LLM MODEL.
-3. DELIMITERS: Use professional delimiters (e.g. ###, ---, <context>) to separate sections.
-4. OBJECTIVE PRECISION: Define the AI's role, constraints, and objective with surgical precision.
-5. CLEAN OUTPUT: Keep the output as raw text without any markdown (no ** for bold).`;
+    const base = strategies[strategy] || strategies['meta'];
+
+    return `${base}
+
+NEURAL TUNING PROTOCOLS (Apply based on the provided Neural Tuning settings):
+- If 'Correct Tokenization' is specified: Structure text to minimize token usage for the LLM. Use efficient delimiters and remove repetitive whitespace.
+- If 'Semantic Precision' is specified: Use exact technical terms. Replace generic descriptions with specific domain-accurate terminology.
+
+IMPORTANT CONSTRAINTS:
+1. Integrate the 'Logic Blueprints' mentioned in the user message into the fabric of the prompt.
+2. Adjust syntax specifically for the target LLM indicated.
+3. Return ONLY the transformed prompt. NO conversational preamble, NO explanations, and NO markdown bolding (**).`;
+};
 
 export const SYSTEM_INSTRUCTION_AUDIT = `You are a Prompt Quality Auditor. Analyze the provided prompt and score it from 0-100 on three metrics: Clarity, Specificity, and Reasoning. Provide results in valid JSON.`;
-
-export const SYSTEM_INSTRUCTION_CRITIQUE = `You are a Senior Prompt Engineer. Look at the optimized prompt and find 3 specific weaknesses. Return a JSON array of objects with "weakness" and "fix_suggestion".`;
 
 const cleanResponse = (text: string | null | undefined): string => {
     if (!text) return '';
@@ -108,33 +121,6 @@ export const auditPrompt = async (prompt: string): Promise<any> => {
         return JSON.parse(response.text || '{}');
     } catch (e) {
         return { clarity: 0, specificity: 0, reasoning: 0, overall_verdict: "Audit failed." };
-    }
-}
-
-export const critiquePrompt = async (prompt: string): Promise<any[]> => {
-    try {
-        const ai = getAI();
-        const response = await ai.models.generateContent({
-            model: 'gemini-3-flash-preview',
-            contents: `Critique this prompt:\n\n${prompt}`,
-            config: {
-                systemInstruction: SYSTEM_INSTRUCTION_CRITIQUE,
-                responseMimeType: "application/json",
-                responseSchema: {
-                    type: Type.ARRAY,
-                    items: {
-                        type: Type.OBJECT,
-                        properties: {
-                            weakness: { type: Type.STRING },
-                            fix_suggestion: { type: Type.STRING }
-                        }
-                    }
-                }
-            }
-        });
-        return JSON.parse(response.text || '[]');
-    } catch (e) {
-        return [];
     }
 }
 
