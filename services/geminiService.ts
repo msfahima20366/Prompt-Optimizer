@@ -44,7 +44,7 @@ export const generatePrompt = async (
   try {
     const ai = getAI();
     const response = await ai.models.generateContent({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: basePrompt,
         config: {
           systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
@@ -67,7 +67,7 @@ export const generatePromptStream = async (
 ): Promise<AsyncIterable<string>> => {
     const ai = getAI();
     const responseStream = await ai.models.generateContentStream({
-        model: 'gemini-3-pro-preview',
+        model: 'gemini-3-flash-preview',
         contents: basePrompt,
         config: {
             systemInstruction: systemInstruction || SYSTEM_INSTRUCTION_GENERATOR,
@@ -88,7 +88,7 @@ export const auditPrompt = async (prompt: string): Promise<any> => {
     try {
         const ai = getAI();
         const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
+            model: 'gemini-3-flash-preview',
             contents: `Audit this prompt:\n\n${prompt}`,
             config: {
                 systemInstruction: SYSTEM_INSTRUCTION_AUDIT,
@@ -115,7 +115,7 @@ export const critiquePrompt = async (prompt: string): Promise<any[]> => {
     try {
         const ai = getAI();
         const response = await ai.models.generateContent({
-            model: 'gemini-3-pro-preview',
+            model: 'gemini-3-flash-preview',
             contents: `Critique this prompt:\n\n${prompt}`,
             config: {
                 systemInstruction: SYSTEM_INSTRUCTION_CRITIQUE,

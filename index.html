@@ -5,7 +5,7 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Prompt Matrix | Professional Engineering</title>
+    <title>Prompt Matrix | Easy AI Tool</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <script>
       tailwind.config = {
@@ -13,85 +13,70 @@
         theme: {
           extend: {
             fontFamily: {
-              sans: ['Inter', 'system-ui', 'sans-serif'],
-              mono: ['JetBrains Mono', 'monospace'],
+              sans: ['Inter', 'sans-serif', 'system-ui'],
             },
             colors: {
-              brand: {
-                indigo: '#6366f1',
-                amber: '#f59e0b',
-                slate: {
-                  50: '#f8fafc',
-                  100: '#f1f5f9',
-                  200: '#e2e8f0',
-                  800: '#1e293b',
-                  900: '#0f172a',
-                  950: '#020617',
-                }
-              }
-            },
-            boxShadow: {
-              'premium': '0 20px 50px -12px rgba(0, 0, 0, 0.08), 0 0 1px 0 rgba(0,0,0,0.1)',
-              'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)',
+              primary: '#4F46E5', // Indigo-600
+              secondary: '#64748B', // Slate-500
+              accent: '#10B981', // Emerald-500
+              surface: '#F8FAFC',
+              darkSurface: '#0F172A'
             }
           }
         }
       }
     </script>
     <style>
-      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap');
-      
-      :root {
-        --brand-indigo: #6366f1;
-        font-family: 'Inter', sans-serif;
-      }
+      @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
       
       body {
-        transition: background-color 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-        background-color: #f8fafc;
-        -webkit-font-smoothing: antialiased;
+        background-color: #F8FAFC;
+        color: #1E293B;
+        transition: all 0.3s ease;
       }
 
       .dark body {
         background-color: #020617;
+        color: #F8FAFC;
       }
 
-      .glass-card {
-        background: rgba(255, 255, 255, 0.8);
-        backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.4);
+      .modern-card {
+        background: white;
+        border: 1px solid #E2E8F0;
+        border-radius: 1rem;
+        box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1);
       }
 
-      .dark .glass-card {
-        background: rgba(15, 23, 42, 0.6);
-        border: 1px solid rgba(255, 255, 255, 0.05);
+      .dark .modern-card {
+        background: #1E293B;
+        border: 1px solid #334155;
       }
 
-      .custom-scrollbar::-webkit-scrollbar { width: 5px; }
-      .custom-scrollbar::-webkit-scrollbar-track { background: transparent; }
-      .custom-scrollbar::-webkit-scrollbar-thumb { background: rgba(99, 102, 241, 0.15); border-radius: 20px; }
-      .custom-scrollbar::-webkit-scrollbar-thumb:hover { background: rgba(99, 102, 241, 0.3); }
-
-      @keyframes fadeUp {
-        from { opacity: 0; transform: translateY(10px); }
-        to { opacity: 1; transform: translateY(0); }
+      .btn-main {
+        background: #4F46E5;
+        color: white;
+        font-weight: 600;
+        padding: 0.75rem 1.5rem;
+        border-radius: 0.5rem;
+        transition: all 0.2s;
       }
-      .animate-fade-up { animation: fadeUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+      .btn-main:hover { background: #4338CA; transform: translateY(-1px); }
 
-      .selection-indigo::selection { background: rgba(99, 102, 241, 0.2); color: #4338ca; }
+      .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+      .custom-scrollbar::-webkit-scrollbar-thumb { background: #CBD5E1; border-radius: 10px; }
     </style>
   <script type="importmap">
 {
   "imports": {
-    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
-    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
-    "react/": "https://aistudiocdn.com/react@^19.2.0/",
-    "react": "https://aistudiocdn.com/react@^19.2.0"
+    "react": "https://esm.sh/react@^19.2.3",
+    "react-dom/": "https://esm.sh/react-dom@^19.2.3/",
+    "react/": "https://esm.sh/react@^19.2.3/",
+    "@google/genai": "https://esm.sh/@google/genai@^1.34.0"
   }
 }
 </script>
 </head>
-  <body class="selection-indigo">
+  <body>
     <div id="root"></div>
     <script type="module" src="/index.tsx"></script>
   </body>

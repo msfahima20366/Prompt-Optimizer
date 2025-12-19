@@ -1,3 +1,4 @@
+
 import React, { useState, useMemo, useEffect } from 'react';
 import { Prompt, LibraryPrompt, LLMModel, PromptTechnique, PromptType, TEXT_MODELS, IMAGE_MODELS, VIDEO_MODELS, ALL_LLM_MODELS } from '../prompts/collection';
 import { LIBRARY_PROMPTS, LIBRARY_CATEGORIES, PROMPT_TECHNIQUES } from '../prompts/library';
@@ -31,27 +32,10 @@ const checkSearchMatch = (prompt: Prompt | LibraryPrompt, query: string): boolea
     const lowerQuery = query.toLowerCase();
     const inTitle = prompt.title.toLowerCase().includes(lowerQuery);
     const inPrompt = prompt.prompt.toLowerCase().includes(lowerQuery);
-    const inTags = ('tags' in prompt && prompt.tags?.some(tag => tag.toLowerCase().includes(lowerQuery))) || false;
-    return inTitle || inPrompt || inTags;
+    return inTitle || inPrompt;
 };
 
 const PROMPT_TYPE_OPTIONS = ['All', 'Text-based Prompt', 'Image Generate Prompt', 'Video Generate Prompt'];
-
-
-const TypeFilterButton: React.FC<{
-  label: string;
-  isActive: boolean;
-  onClick: () => void;
-}> = ({ label, isActive, onClick }) => {
-  const baseClasses = "flex-shrink-0 text-center px-4 py-2 text-sm font-bold rounded-lg transition-all duration-300 focus:outline-none focus:ring-2 focus:ring-indigo-500";
-  const activeClasses = "bg-indigo-600 text-white shadow";
-  const inactiveClasses = "bg-transparent text-gray-500 hover:bg-gray-300/50 dark:bg-transparent dark:text-gray-400 dark:hover:bg-gray-800/60";
-  return (
-    <button onClick={onClick} className={`${baseClasses} ${isActive ? activeClasses : inactiveClasses}`}>
-      {label}
-    </button>
-  );
-};
 
 type SortOption = 'trending' | 'newest' | 'az';
 
@@ -74,10 +58,10 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
   const [categoryFilter, setCategoryFilter] = useState<string[]>([]);
   const [libraryTypeFilter, setLibraryTypeFilter] = useState<string>('All');
   const [userCollectionTypeFilter, setUserCollectionTypeFilter] = useState<'all' | PromptType>('all');
-  const [sortOption, setSortOption] = useState<SortOption>('trending');
+  const [librarySort, setLibrarySort] = useState<SortOption>('trending');
+  const [userSort, setUserSort] = useState<SortOption>('newest');
   const [selectMode, setSelectMode] = useState(false);
   
-  // Logic for Prompt Versioning (display only latest version)
   const latestUserPrompts = useMemo(() => {
     const grouped = userCollection.reduce((acc, p) => {
         const existing = acc.get(p.versionGroupId);
@@ -89,41 +73,20 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
     return Array.from(grouped.values());
   }, [userCollection]);
 
-  // Get version counts for display
-  const versionCounts = useMemo(() => {
-    return userCollection.reduce((acc, p) => {
-        acc[p.versionGroupId] = (acc[p.versionGroupId] || 0) + 1;
-        return acc;
-    }, {} as Record<string, number>);
-  }, [userCollection]);
-
-
   useEffect(() => {
-    if (!selectMode) {
-        onClearSelection();
-    }
+    if (!selectMode) onClearSelection();
   }, [selectMode, onClearSelection]);
 
   const availableLlmModels = useMemo(() => {
     switch (libraryTypeFilter) {
-        case 'Text-based Prompt':
-            return TEXT_MODELS;
-        case 'Image Generate Prompt':
-            return IMAGE_MODELS;
-        case 'Video Generate Prompt':
-            return VIDEO_MODELS;
-        case 'All':
-        default:
-            return ALL_LLM_MODELS;
+        case 'Text-based Prompt': return TEXT_MODELS;
+        case 'Image Generate Prompt': return IMAGE_MODELS;
+        case 'Video Generate Prompt': return VIDEO_MODELS;
+        default: return ALL_LLM_MODELS;
     }
   }, [libraryTypeFilter]);
 
-  useEffect(() => {
-    if (llmFilter.length > 0 && !llmFilter.every(m => availableLlmModels.includes(m))) {
-        setLlmFilter([]);
-    }
-  }, [llmFilter, availableLlmModels]);
-
+  // Logic for LIBRARY PROMPTS Sorting
   const filteredLibraryPrompts = useMemo(() => {
     let prompts = LIBRARY_PROMPTS.filter(p => {
         if (llmFilter.length > 0 && !p.llmModels.some(model => llmFilter.includes(model))) return false;
@@ -138,156 +101,143 @@ export const CollectionView: React.FC<CollectionViewProps> = ({
         return true;
     });
 
-    switch (sortOption) {
+    // CRITICAL FIX: Use [...prompts] to create a new array before sorting to trigger React updates
+    const sorted = [...prompts];
+    switch (librarySort) {
         case 'newest':
-            return prompts.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
+            return sorted.sort((a, b) => (b.createdAt || 0) - (a.createdAt || 0));
         case 'az':
-            return prompts.sort((a, b) => a.title.localeCompare(b.title));
+            return sorted.sort((a, b) => a.title.localeCompare(b.title));
         case 'trending':
         default:
-            return prompts.sort((a, b) => {
+            return sorted.sort((a, b) => {
                 const scoreA = (a.views || 0) + (a.shares || 0) * 5;
                 const scoreB = (b.views || 0) + (b.shares || 0) * 5;
                 return scoreB - scoreA;
             });
     }
-  }, [searchQuery, llmFilter, techniqueFilter, categoryFilter, libraryTypeFilter, sortOption, collectionFilter]);
+  }, [searchQuery, llmFilter, techniqueFilter, categoryFilter, libraryTypeFilter, librarySort]);
 
+  // Logic for USER COLLECTION Sorting
   const filteredUserCollection = useMemo(() => {
     let prompts = (collectionFilter === 'all' ? latestUserPrompts : userCollection.filter(p => p.isFavorite));
     
     prompts = prompts.filter(p => {
-        if (collectionFilter === 'favorites' && !p.isFavorite) return false;
         if (userCollectionTypeFilter !== 'all' && p.type !== userCollectionTypeFilter) return false;
-        if (techniqueFilter.length > 0 && p.technique && !techniqueFilter.includes(p.technique)) return false;
         if (!checkSearchMatch(p, searchQuery)) return false;
         return true;
     });
 
-    return prompts.sort((a,b) => b.createdAt - a.createdAt);
+    const sorted = [...prompts];
+    switch (userSort) {
+        case 'az': return sorted.sort((a, b) => a.title.localeCompare(b.title));
+        case 'trending': return sorted.sort((a,b) => b.createdAt - a.createdAt); // Trending for user = recently active
+        case 'newest':
+        default: return sorted.sort((a,b) => b.createdAt - a.createdAt);
+    }
+  }, [latestUserPrompts, userCollection, searchQuery, collectionFilter, userCollectionTypeFilter, userSort]);
 
-  }, [latestUserPrompts, userCollection, searchQuery, collectionFilter, userCollectionTypeFilter, techniqueFilter]);
-
-  const resetFilters = () => {
-      setSearchQuery('');
-      setLlmFilter([]);
-      setTechniqueFilter([]);
-      setCategoryFilter([]);
-      setLibraryTypeFilter('All');
-  };
-
-  const noPromptsFound = filteredLibraryPrompts.length === 0 && filteredUserCollection.length === 0;
-  const showLibraryFilters = collectionFilter === 'all';
-  const hasActiveFilters = searchQuery || llmFilter.length > 0 || techniqueFilter.length > 0 || categoryFilter.length > 0 || libraryTypeFilter !== 'All';
-
-  const SortButton: React.FC<{ label: string; value: SortOption; icon: string; }> = ({ label, value, icon }) => (
+  const SortButton: React.FC<{ label: string; value: SortOption; active: SortOption; onClick: (v: SortOption) => void; }> = ({ label, value, active, onClick }) => (
     <button
-      onClick={() => setSortOption(value)}
-      className={`flex items-center gap-2 px-3 py-1.5 text-xs font-bold rounded-full transition-colors ${sortOption === value ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700/80 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600'}`}
+      onClick={() => onClick(value)}
+      className={`px-3 py-1.5 text-[10px] font-bold rounded-full transition-all border ${active === value ? 'bg-indigo-600 text-white border-indigo-600 shadow-md' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-transparent hover:bg-gray-200'}`}
     >
-      {icon} {label}
+      {label}
     </button>
   );
 
   return (
     <div className="space-y-8">
-      {showLibraryFilters && (
+      {collectionFilter === 'all' && (
         <div className="space-y-4">
           <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <SearchIcon />
-              </div>
+              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none"><SearchIcon /></div>
               <input
                   type="text"
-                  id="search-prompts"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder="Search titles, prompts, and #tags..."
-                  className="w-full bg-white dark:bg-gray-900/50 border-2 border-gray-300 dark:border-gray-700 rounded-lg shadow-inner pl-10 pr-4 py-3 text-gray-900 dark:text-gray-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition"
+                  placeholder="Search prompts..."
+                  className="w-full bg-white dark:bg-gray-900 border-2 border-gray-200 dark:border-gray-800 rounded-xl pl-10 pr-4 py-3 focus:outline-none focus:ring-2 focus:ring-indigo-500"
               />
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
               <FilterDropdown label="Type" options={PROMPT_TYPE_OPTIONS} selectedValue={libraryTypeFilter} onValueChange={setLibraryTypeFilter} />
-              <MultiSelectDropdown label="LLM Model" options={availableLlmModels} selectedValues={llmFilter} onValueChange={setLlmFilter as (val: string[]) => void} />
-              <MultiSelectDropdown label="Technique" options={PROMPT_TECHNIQUES} selectedValues={techniqueFilter} onValueChange={setTechniqueFilter as (val: string[]) => void} />
+              <MultiSelectDropdown label="Model" options={availableLlmModels} selectedValues={llmFilter} onValueChange={setLlmFilter as (v: string[]) => void} />
+              <MultiSelectDropdown label="Technique" options={PROMPT_TECHNIQUES} selectedValues={techniqueFilter} onValueChange={setTechniqueFilter as (v: string[]) => void} />
               <MultiSelectDropdown label="Category" options={LIBRARY_CATEGORIES} selectedValues={categoryFilter} onValueChange={setCategoryFilter} />
           </div>
-           {hasActiveFilters && (
-              <button onClick={resetFilters} className="text-sm font-semibold text-indigo-600 hover:text-indigo-500 dark:text-indigo-400 dark:hover:text-indigo-300 transition-colors">
-                Reset All Filters
-              </button>
-            )}
         </div>
       )}
       
-      <div className="space-y-8">
-        {noPromptsFound && (
-            <div className="text-center py-12">
-                <p className="text-gray-600 dark:text-gray-400 text-lg">No prompts found.</p>
-                <p className="text-gray-500 dark:text-gray-500 text-sm">Try adjusting your search or filters.</p>
-            </div>
-        )}
-        
-        {showLibraryFilters && filteredLibraryPrompts.length > 0 && (
-          <section>
-             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-4">
-                <h2 className="text-2xl font-bold gradient-text pb-2 border-b-2 border-purple-600/20 dark:border-purple-500/20">Prompt Library</h2>
-                <div className="flex items-center gap-2">
-                    <SortButton label="Trending" value="trending" icon="🔥"/>
-                    <SortButton label="Newest" value="newest" icon="✨"/>
-                    <SortButton label="A-Z" value="az" icon="🔠"/>
+      <div className="space-y-12">
+        {collectionFilter === 'all' && filteredLibraryPrompts.length > 0 && (
+          <section className="space-y-4">
+             <div className="flex justify-between items-end border-b border-gray-100 dark:border-gray-800 pb-2">
+                <div>
+                    <h2 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">Prompt Library</h2>
+                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-widest">Public Templates</p>
+                </div>
+                <div className="flex items-center gap-2 mb-1">
+                    <SortButton label="Trending" value="trending" active={librarySort} onClick={setLibrarySort} />
+                    <SortButton label="Newest" value="newest" active={librarySort} onClick={setLibrarySort} />
+                    <SortButton label="A-Z" value="az" active={librarySort} onClick={setLibrarySort} />
                 </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
               {filteredLibraryPrompts.map(prompt => (
-                <PromptCard key={prompt.id} prompt={prompt} onView={() => onViewPrompt(prompt)} onForkPrompt={() => onForkPrompt(prompt)} searchQuery={searchQuery} />
+                <PromptCard key={prompt.id} prompt={prompt} onView={() => onViewPrompt(prompt)} />
               ))}
             </div>
           </section>
         )}
 
-        {filteredUserCollection.length > 0 && (
-          <section className="space-y-4">
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div className="flex-1">
-                    <h2 className="text-2xl font-bold gradient-text pb-2">
+        <section className="space-y-4">
+            <div className="flex justify-between items-end border-b border-gray-100 dark:border-gray-800 pb-2">
+                <div>
+                    <h2 className="text-xl font-black text-gray-800 dark:text-white uppercase tracking-tight">
                         {collectionFilter === 'favorites' ? 'My Favorites' : 'My Collection'}
                     </h2>
+                    <p className="text-[10px] text-indigo-500 font-bold uppercase tracking-widest">Your Private Vault</p>
                 </div>
-                <div className="flex items-center gap-2">
-                    <button onClick={() => setSelectMode(prev => !prev)} className={`px-4 py-2 text-sm font-bold rounded-lg transition-colors ${selectMode ? 'bg-indigo-600 text-white' : 'bg-gray-200 dark:bg-gray-700'}`}>
-                        {selectMode ? 'Cancel' : 'Select'}
+                <div className="flex items-center gap-2 mb-1">
+                    <button onClick={() => setSelectMode(!selectMode)} className={`px-3 py-1.5 text-[10px] font-bold rounded-full border transition-all ${selectMode ? 'bg-indigo-600 text-white border-indigo-600' : 'bg-gray-100 dark:bg-gray-800 text-gray-500 border-transparent hover:bg-gray-200'}`}>
+                        {selectMode ? 'Cancel Selection' : 'Select Multiple'}
                     </button>
-                    <div className="flex items-center gap-1 p-1 bg-gray-200/60 dark:bg-gray-900/50 rounded-xl border border-gray-300 dark:border-gray-700/80">
-                        {(['all', 'image', 'text', 'video'] as const).map(type => (
-                            <TypeFilterButton 
-                                key={type}
-                                label={type.charAt(0).toUpperCase() + type.slice(1)}
-                                isActive={userCollectionTypeFilter === type}
-                                onClick={() => setUserCollectionTypeFilter(type)}
-                            />
-                        ))}
-                    </div>
+                    <div className="h-4 w-px bg-gray-200 dark:bg-gray-700 mx-1"></div>
+                    <SortButton label="Newest" value="newest" active={userSort} onClick={setUserSort} />
+                    <SortButton label="A-Z" value="az" active={userSort} onClick={setUserSort} />
                 </div>
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
-              {filteredUserCollection.map(prompt => (
-                <PromptCard 
-                    key={prompt.id} 
-                    prompt={prompt} 
-                    onView={() => onViewPrompt(prompt)} 
-                    onToggleFavorite={() => onToggleFavorite(prompt.id)} 
-                    searchQuery={searchQuery} 
-                    versionCount={versionCounts[prompt.versionGroupId]}
-                    selectMode={selectMode}
-                    isSelected={selectedIds.has(prompt.id)}
-                    onSelect={() => onToggleSelect(prompt.id)}
-                />
-              ))}
-            </div>
-          </section>
-        )}
+            
+            {filteredUserCollection.length === 0 ? (
+                <div className="text-center py-20 bg-gray-50 dark:bg-gray-900/30 rounded-2xl border-2 border-dashed border-gray-200 dark:border-gray-800">
+                    <p className="text-gray-400 font-medium">No saved prompts found here.</p>
+                </div>
+            ) : (
+                <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6">
+                    {filteredUserCollection.map(prompt => (
+                        <div key={prompt.id} className="relative">
+                            {selectMode && (
+                                <div className="absolute top-4 left-4 z-20">
+                                    <input 
+                                        type="checkbox" 
+                                        checked={selectedIds.has(prompt.id)} 
+                                        onChange={() => onToggleSelect(prompt.id)}
+                                        className="w-5 h-5 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                    />
+                                </div>
+                            )}
+                            <PromptCard 
+                                prompt={prompt} 
+                                onView={() => onViewPrompt(prompt)} 
+                            />
+                        </div>
+                    ))}
+                </div>
+            )}
+        </section>
       </div>
+      
       <BulkActionBar 
         selectedCount={selectedIds.size}
         onClear={onClearSelection}

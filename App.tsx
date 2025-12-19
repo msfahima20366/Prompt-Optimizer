@@ -4,7 +4,7 @@ import { Header } from './components/Header';
 import { generateImage } from './services/geminiService';
 import { Tabs } from './components/Tabs';
 import { CollectionView } from './components/CollectionView';
-import { Prompt, PromptType, UserContext, LibraryPrompt, HistoryItem, Project, Workflow, User, CommunityPrompt, PromptTechnique, Team } from './prompts/collection';
+import { Prompt, PromptType, UserContext, LibraryPrompt, HistoryItem, User, PromptTechnique, CommunityPrompt } from './prompts/collection';
 import { SavePromptModal } from './components/SavePromptModal';
 import { PromptDetailModal } from './components/PromptDetailModal';
 import { PromptBuilderView } from './components/StudioView';
@@ -12,12 +12,11 @@ import { HistoryModal } from './components/HistoryModal';
 import { CommunityView } from './components/CommunityView';
 import { OptimizerView } from './components/OptimizerView';
 import { SaveContextModal } from './components/SaveContextModal';
-import { WorkspaceView } from './components/WorkspaceView';
 import { AnalyticsDashboardView } from './components/AnalyticsDashboardView';
 import { MatrixView } from './components/MatrixView';
 import { AIGalaxyView } from './components/AIGalaxyView';
 
-type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'workspace' | 'analytics' | 'matrix' | 'galaxy';
+type View = 'builder' | 'collection' | 'community' | 'projects' | 'workflows' | 'optimizer' | 'analytics' | 'matrix' | 'galaxy';
 type CollectionFilter = 'all' | 'favorites';
 type Theme = 'light' | 'dark';
 
@@ -30,9 +29,7 @@ const App: React.FC = () => {
   const [theme, setTheme] = useState<Theme>(() => (localStorage.getItem('theme') as Theme) || 'light');
 
   const [currentUser, setCurrentUser] = useState<User | null>(null);
-  const [allUsers, setAllUsers] = useState<User[]>([]); 
   const [communityPrompts, setCommunityPrompts] = useState<CommunityPrompt[]>([]);
-  const [teams, setTeams] = useState<Team[]>([]);
 
   const [savingPrompt, setSavingPrompt] = useState<{prompt: string, title?: string} | null>(null);
   const [viewingPrompt, setViewingPrompt] = useState<Prompt | LibraryPrompt | null>(null);
@@ -108,7 +105,6 @@ const App: React.FC = () => {
       case 'builder': return <PromptBuilderView onGenerateImage={handleGenerateImage} isGenerating={isGeneratingImage} generatedImage={generatedImage} error={imageError} onSavePrompt={(p) => setSavingPrompt({prompt: p})} />;
       case 'matrix': return <MatrixView />;
       case 'galaxy': return <AIGalaxyView />;
-      case 'workspace': return <WorkspaceView teams={teams} allUsers={allUsers} userCollection={userCollection} currentUser={currentUser} />;
       case 'community': return <CommunityView communityPrompts={communityPrompts} currentUser={currentUser} onLike={() => {}} onFork={() => {}} />;
       case 'analytics': return <AnalyticsDashboardView communityPrompts={communityPrompts} currentUser={currentUser} />;
       default: return <CollectionView userCollection={userCollection} onViewPrompt={setViewingPrompt} onToggleFavorite={handleToggleFavorite} onForkPrompt={() => {}} collectionFilter={collectionFilter} selectedIds={selectedPromptIds} onToggleSelect={(id) => setSelectedPromptIds(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; })} onClearSelection={() => setSelectedPromptIds(new Set())} onBulkDelete={() => {}} onBulkToggleFavorite={() => {}} onBulkAddToProject={() => {}} />;
@@ -116,23 +112,25 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen text-brand-navy dark:text-slate-100 transition-colors duration-500">
-      <div className="max-w-[1600px] mx-auto px-4 sm:px-10 py-8 space-y-12">
+    <div className="min-h-screen text-slate-900 dark:text-slate-100 transition-colors duration-500 overflow-x-hidden">
+      {/* Decorative Blobs */}
+      <div className="fixed -top-40 -left-40 w-96 h-96 bg-indigo-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+      <div className="fixed -bottom-40 -right-40 w-96 h-96 bg-emerald-500/10 rounded-full blur-[100px] pointer-events-none"></div>
+
+      <div className="max-w-[1400px] mx-auto px-6 py-8 space-y-10 relative z-10">
         <Header theme={theme} toggleTheme={toggleTheme} onShowHistory={() => setIsHistoryModalOpen(true)} onShowCollection={() => {setActiveView('collection'); setCollectionFilter('all');}} onShowFavorites={() => { setActiveView('collection'); setCollectionFilter('favorites'); }} currentUser={currentUser} onShowAnalytics={() => setActiveView('analytics')} />
         
         <div className="flex justify-center sticky top-8 z-50">
           <Tabs activeView={activeView} setActiveView={setActiveView} />
         </div>
 
-        <main className="glass-card rounded-[3rem] shadow-[0_40px_100px_-20px_rgba(180,83,9,0.15)] p-10 md:p-16 min-h-[750px] animate-fade-in relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-brand-amber/10 blur-[100px] pointer-events-none"></div>
-          <div className="absolute bottom-0 left-0 w-80 h-80 bg-orange-500/5 blur-[100px] pointer-events-none"></div>
-          <div className="relative z-10">{renderView()}</div>
+        <main className="glass-card rounded-[2.5rem] shadow-premium p-8 md:p-12 min-h-[750px] animate-fade-in">
+          {renderView()}
         </main>
 
-        <footer className="flex flex-col items-center gap-4 opacity-40 pb-16">
-          <div className="h-[2px] w-12 bg-gradient-to-r from-transparent via-brand-amber to-transparent"></div>
-          <p className="text-[10px] font-black uppercase tracking-[0.6em] text-brand-navy dark:text-slate-400">Engineered for Creative Precision</p>
+        <footer className="flex flex-col items-center gap-4 opacity-40 pb-12">
+          <div className="h-px w-24 bg-slate-300 dark:bg-slate-700"></div>
+          <p className="text-[10px] font-bold uppercase tracking-[0.4em]">Proprietary Matrix Architecture v5.0</p>
         </footer>
       </div>
 
