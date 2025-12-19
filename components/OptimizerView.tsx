@@ -40,7 +40,7 @@ const STRATEGIES = [
     { id: 'technical', label: 'Technical Spec', icon: '🛠️', desc: 'Architected: Formatted as structured dev requirements.' }
 ];
 
-export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSaveNewContext, onDeleteContext }) => {
+export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSaveNewContext, onDeleteContext, onSavePrompt, addToHistory }) => {
     const [input, setInput] = useState("");
     const [selectedBlueprints, setSelectedBlueprints] = useState<Set<string>>(new Set(['persona', 'cot']));
     const [selectedTuning, setSelectedTuning] = useState<Set<string>>(new Set(['tokenization']));
@@ -99,6 +99,7 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSa
             }
             const auditData = await auditPrompt(fullText);
             setAudit(auditData);
+            if (fullText) addToHistory(input);
         } catch (e) {
             setResult("An inference error occurred. Please verify your connection or attempt a retry.");
         } finally {
@@ -183,27 +184,36 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSa
                         </div>
                         <button 
                             onClick={onSaveNewContext}
-                            className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all"
+                            className="w-8 h-8 rounded-full bg-indigo-50 dark:bg-indigo-900/30 text-indigo-600 flex items-center justify-center hover:bg-indigo-600 hover:text-white transition-all shadow-sm"
                             title="Add New Context"
                         >
-                            +
+                            <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}><path strokeLinecap="round" strokeLinejoin="round" d="M12 4v16m8-8H4" /></svg>
                         </button>
                     </div>
-                    <div className="grid grid-cols-1 gap-2 max-h-48 overflow-y-auto custom-scrollbar pr-2">
+                    <div className="grid grid-cols-1 gap-2 max-h-56 overflow-y-auto custom-scrollbar pr-2">
                         {userContexts.length === 0 ? (
                             <p className="text-[10px] text-gray-400 font-medium italic p-2 bg-gray-50 dark:bg-gray-800/50 rounded-lg">No contexts saved. Click "+" to add background info like Brand Voice or Project Goals.</p>
                         ) : (
                             userContexts.map(context => (
-                                <button 
-                                    key={context.id}
-                                    onClick={() => toggleContext(context.id)}
-                                    className={`text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 flex items-center justify-between ${selectedContexts.has(context.id) ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-transparent hover:border-gray-200'}`}
-                                >
-                                    <span className="truncate pr-2">{context.title}</span>
-                                    {selectedContexts.has(context.id) && (
-                                        <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
-                                    )}
-                                </button>
+                                <div key={context.id} className="group relative flex items-center gap-2">
+                                    <button 
+                                        onClick={() => toggleContext(context.id)}
+                                        title={`Content preview: ${context.content.substring(0, 50)}...`}
+                                        className={`flex-1 text-left px-4 py-2.5 rounded-xl text-xs font-bold transition-all border-2 flex items-center justify-between ${selectedContexts.has(context.id) ? 'bg-indigo-50 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300 border-indigo-500' : 'bg-white dark:bg-gray-800 text-gray-500 border-transparent hover:border-gray-200'}`}
+                                    >
+                                        <span className="truncate pr-2">{context.title}</span>
+                                        {selectedContexts.has(context.id) && (
+                                            <div className="w-2 h-2 rounded-full bg-indigo-500"></div>
+                                        )}
+                                    </button>
+                                    <button 
+                                        onClick={() => onDeleteContext(context.id)}
+                                        className="opacity-0 group-hover:opacity-100 p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-all"
+                                        title="Delete this context"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" /></svg>
+                                    </button>
+                                </div>
                             ))
                         )}
                     </div>
@@ -289,12 +299,21 @@ export const OptimizerView: React.FC<OptimizerViewProps> = ({ userContexts, onSa
                                 <span className="font-black text-xs uppercase tracking-[0.3em]">Optimized Output</span>
                             </div>
                             {result && (
-                                <button 
-                                    onClick={() => navigator.clipboard.writeText(result)}
-                                    className="px-4 py-2 hover:bg-white/10 rounded-xl transition-all text-[10px] font-black uppercase border border-white/20 tracking-widest"
-                                >
-                                    Copy Result
-                                </button>
+                                <div className="flex items-center gap-3">
+                                    <button 
+                                        onClick={() => onSavePrompt(result)}
+                                        className="px-4 py-2 hover:bg-white/10 rounded-xl transition-all text-[10px] font-black uppercase border border-white/20 tracking-widest flex items-center gap-2"
+                                    >
+                                        <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}><path strokeLinecap="round" strokeLinejoin="round" d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z" /></svg>
+                                        Save to Vault
+                                    </button>
+                                    <button 
+                                        onClick={() => navigator.clipboard.writeText(result)}
+                                        className="px-4 py-2 hover:bg-white/10 rounded-xl transition-all text-[10px] font-black uppercase border border-white/20 tracking-widest"
+                                    >
+                                        Copy Result
+                                    </button>
+                                </div>
                             )}
                         </div>
                         <div className="flex-1 p-10 text-white text-xl font-medium whitespace-pre-wrap leading-relaxed">

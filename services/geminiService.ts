@@ -1,44 +1,59 @@
 
 import { GoogleGenAI, Type } from "@google/genai";
 
-const SYSTEM_INSTRUCTION_GENERATOR = `You are a helpful and creative AI assistant. You will be given a prompt and must generate a high-quality response that fulfills the user's request precisely and creatively.
-Adhere to any specific constraints or formats mentioned in the prompt.
-The output should be clean text, without any markdown formatting like bolding (**).`;
+const SYSTEM_INSTRUCTION_GENERATOR = `You are the world's most advanced Prompt Engineering System. Your task is to transform raw, basic, or messy user drafts into highly optimized, high-performance instructions for AI models.
+
+CRITICAL RULES:
+1. OUTPUT ONLY THE FINAL PROMPT. Do not say "Here is your prompt" or "I have optimized it".
+2. NO BOLDING. Do not use double asterisks (**) for formatting. Use caps or headers like [SECTION NAME] instead.
+3. ADHERE TO THE STRATEGY. If the strategy is Meta, use hierarchical blocks. If it is Concise, be hyper-efficient.
+4. INTEGRATE CONTEXT. If Knowledge Context is provided, weave it into the background or persona of the prompt.
+5. NO CONVERSATIONAL FILLER. Return only the result.`;
 
 export const getMetaPromptInstruction = (strategy: string) => {
     const strategies: Record<string, string> = {
-        'meta': `Act as a world-class prompt engineer. Your goal is to transform the user's draft into a high-dimensional 'Meta-Prompt'. 
-        Structure the output using clear hierarchical blocks such as [CONTEXT], [OBJECTIVE], [CONSTRAINTS], and [REASONING]. 
-        This prompt should be optimized for complex reasoning and multi-step tasks.`,
+        'meta': `ACT AS A SENIOR PROMPT ARCHITECT. 
+Your goal is to build a 'Meta-Prompt Framework' around the user's draft. 
+Structure the output into the following explicit blocks:
+[SYSTEM ROLE]: Define a hyper-specific expert persona.
+[CONTEXT]: Incorporate all provided background and goals.
+[OBJECTIVE]: State the primary task with absolute precision.
+[LOGIC STEPS]: Break down the reasoning process (Chain of Thought).
+[CONSTRAINTS & FORMATTING]: List strict rules and the expected output structure.
+[INITIALIZATION]: A concluding command to start the task.`,
         
-        'refined': `Act as a professional editor and logic specialist. Your goal is to polish the user's draft into a single, cohesive, and perfectly articulated instruction. 
-        DO NOT use complex Meta-Prompt headers or sections. Simply return a high-quality, professional, and clear version of the original intent that is ready to be used directly.`,
+        'refined': `ACT AS A PROFESSIONAL EDITOR & LOGIC SPECIALIST. 
+Your goal is to turn the user's draft into a single, cohesive, polished, and highly clear instruction. 
+Fix all grammatical errors, clarify vague language, and ensure the tone is authoritative and professional. 
+Do not use complex Meta-headers. Just a single, high-quality, direct instruction.`,
         
-        'concise': `Act as a token-efficiency expert. Your goal is to strip the user's draft down to its absolute core logic. 
-        Eliminate all conversational filler, adjectives, and metadata. Return a hyper-direct, punchy instruction that consumes the minimum number of tokens while retaining 100% of the original intent.`,
+        'concise': `ACT AS A TOKEN-EFFICIENCY EXPERT. 
+Strip away all unnecessary words, pleasantries, and metaphors. 
+Identify the 'Core Logic' of the user's intent and express it in the shortest possible way that still retains 100% of the instruction's power. 
+Ideal for high-speed, cost-effective API calls.`,
         
-        'technical': `Act as a system architect. Your goal is to format the user's request as a formal technical specification or a programming-style requirement document. 
-        Use structured lists, if-then logic, and clearly defined parameters. This is intended for high-precision logic tasks or code generation.`
+        'technical': `ACT AS A SOFTWARE ARCHITECT. 
+Format the user's request as a Technical Specification or a Requirement Document. 
+Use markdown lists and structured logic gates (IF/THEN). 
+Focus on variables, parameters, and deterministic outcomes. Use a clinical, precise, and systematic tone.`
     };
 
     const base = strategies[strategy] || strategies['meta'];
 
     return `${base}
 
-NEURAL TUNING PROTOCOLS (Apply based on the provided Neural Tuning settings):
-- If 'Correct Tokenization' is specified: Structure text to minimize token usage for the LLM. Use efficient delimiters and remove repetitive whitespace.
-- If 'Semantic Precision' is specified: Use exact technical terms. Replace generic descriptions with specific domain-accurate terminology.
+NEURAL TUNING PROTOCOLS (Apply if specified in user input):
+- Correct Tokenization: Ensure logical delimiters (e.g., using ### or ---) to help the model distinguish sections.
+- Semantic Precision: Replace all "vague" words with "industry-standard" terminology.
 
-IMPORTANT CONSTRAINTS:
-1. Integrate the 'Logic Blueprints' mentioned in the user message into the fabric of the prompt.
-2. Adjust syntax specifically for the target LLM indicated.
-3. Return ONLY the transformed prompt. NO conversational preamble, NO explanations, and NO markdown bolding (**).`;
+FINAL DIRECTIVE: Transform the draft provided in the user message according to the blueprint above.`;
 };
 
-export const SYSTEM_INSTRUCTION_AUDIT = `You are a Prompt Quality Auditor. Analyze the provided prompt and score it from 0-100 on three metrics: Clarity, Specificity, and Reasoning. Provide results in valid JSON.`;
+export const SYSTEM_INSTRUCTION_AUDIT = `You are a Prompt Quality Auditor. Analyze the provided prompt and score it from 0-100 on three metrics: Clarity (how easy is it to understand), Specificity (how precise are the instructions), and Reasoning (does it encourage logical steps). Provide results in valid JSON.`;
 
 const cleanResponse = (text: string | null | undefined): string => {
     if (!text) return '';
+    // Remove markdown bolding as requested
     return text.replace(/\*\*/g, '').trim();
 }
 
@@ -91,7 +106,7 @@ export const generatePromptStream = async (
 
     async function* streamGenerator() {
         for await (const chunk of responseStream) {
-            if (chunk.text) yield chunk.text;
+            if (chunk.text) yield cleanResponse(chunk.text);
         }
     }
     return streamGenerator();
